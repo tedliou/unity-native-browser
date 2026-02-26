@@ -64,4 +64,13 @@ sealed class BrowserException(
     class NotAvailableException(
         message: String,
     ) : BrowserException(message)
+
+    /**
+     * Thrown when a URL is invalid or has an unsupported scheme.
+     *
+     * @param url The invalid URL
+     */
+    class InvalidUrlException(
+        val url: String,
+    ) : BrowserException("Invalid URL: $url")
 }

@@ -55,10 +55,10 @@ class UnityBridgeCallback : BrowserCallback {
             when (exception) {
                 is BrowserException.PageLoadException -> put("url", exception.url)
                 is BrowserException.JavaScriptException -> put("requestId", exception.requestId)
+                is BrowserException.InvalidUrlException -> put("url", exception.url)
                 is BrowserException.InitializationException,
                 is BrowserException.ConfigException,
                 is BrowserException.NotAvailableException -> {
-                    // No additional context for these types
                 }
             }
         }
