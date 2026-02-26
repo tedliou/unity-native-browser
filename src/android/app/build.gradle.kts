@@ -38,6 +38,7 @@ dependencies {
     implementation(libs.androidx.browser)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.webkit)
+    implementation(libs.androidx.activity.ktx)
     testImplementation(libs.junit)
     testImplementation(libs.mockk)
     testImplementation(libs.robolectric)

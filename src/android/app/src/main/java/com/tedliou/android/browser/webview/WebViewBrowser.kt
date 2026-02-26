@@ -2,6 +2,8 @@ package com.tedliou.android.browser.webview
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Application
+import android.os.Bundle
 import android.os.Looper
 import android.view.View
 import android.view.ViewGroup
@@ -13,6 +15,7 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.MainThread
 import com.tedliou.android.browser.core.BrowserCallback
 import com.tedliou.android.browser.core.BrowserConfig
@@ -32,8 +35,11 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private val activityRef = WeakReference(activity)
     private var webView: WebView? = null
     private var callback: BrowserCallback? = null
+    private var config: BrowserConfig? = null
     private var jsBridge: JsBridge? = null
     private var overlayView: View? = null
+    private var backPressedCallback: OnBackPressedCallback? = null
+    private var lifecycleCallbacks: Application.ActivityLifecycleCallbacks? = null
 
     /**
      * Opens the WebView with the provided configuration.
@@ -45,6 +51,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         runOnUiThread {
             BrowserLogger.d(SUBTAG, "Opening WebView with URL: ${config.url}")
             this.callback = callback
+            this.config = config
             if (webView != null) {
                 BrowserLogger.w(SUBTAG, "WebView already open; closing before reopen")
                 closeInternal(notifyClosed = false)
@@ -70,6 +77,8 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             overlayView = overlay
             createdWebView.loadUrl(config.url)
             webView = createdWebView
+            setupBackPressHandling(activity)
+            setupLifecycleHandling(activity)
         }
     }
 
@@ -179,6 +188,9 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         current.clearHistory()
         webView = null
         jsBridge = null
+        backPressedCallback?.isEnabled = false
+        backPressedCallback?.remove()
+        backPressedCallback = null
         if (notifyClosed) {
             callback?.onClosed()
         }
@@ -198,6 +210,13 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         current.destroy()
         webView = null
         jsBridge = null
+        backPressedCallback?.isEnabled = false
+        backPressedCallback?.remove()
+        backPressedCallback = null
+        lifecycleCallbacks?.let { callbacks ->
+            activityRef.get()?.application?.unregisterActivityLifecycleCallbacks(callbacks)
+        }
+        lifecycleCallbacks = null
     }
 
     @MainThread
@@ -285,6 +304,15 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             ): Boolean {
                 val url = request?.url?.toString().orEmpty()
                 BrowserLogger.v(SUBTAG, "URL loading: $url")
+                val currentConfig = config ?: return false
+                if (DeepLinkMatcher.matches(url, currentConfig.deepLinkPatterns)) {
+                    BrowserLogger.d(SUBTAG, "Deep link intercepted: $url")
+                    callback?.onDeepLink(url)
+                    if (currentConfig.closeOnDeepLink) {
+                        close()
+                    }
+                    return true
+                }
                 return false
             }
         }
@@ -315,6 +343,91 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         } else {
             activity.runOnUiThread(block)
         }
+    }
+
+    /**
+     * Sets up back button handling for the WebView.
+     *
+     * When back is pressed:
+     * - If WebView can navigate back in history, it does so
+     * - Otherwise, the WebView is closed
+     */
+    @MainThread
+    private fun setupBackPressHandling(activity: Activity) {
+        // Try to use OnBackPressedDispatcher if activity is ComponentActivity
+        val componentActivity = activity as? androidx.activity.ComponentActivity
+        if (componentActivity != null) {
+            val callback = object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    runOnUiThread {
+                        val view = webView
+                        if (view != null && view.canGoBack()) {
+                            BrowserLogger.d(SUBTAG, "Back pressed: navigating back in WebView")
+                            view.goBack()
+                        } else {
+                            BrowserLogger.d(SUBTAG, "Back pressed: closing WebView")
+                            close()
+                        }
+                    }
+                }
+            }
+            componentActivity.onBackPressedDispatcher.addCallback(componentActivity, callback)
+            backPressedCallback = callback
+            BrowserLogger.d(SUBTAG, "Back button handling registered via OnBackPressedCallback")
+        } else {
+            BrowserLogger.w(SUBTAG, "Activity is not ComponentActivity; back button handling not available")
+            BrowserLogger.w(SUBTAG, "For back button support, Unity Activity should extend ComponentActivity")
+        }
+    }
+
+    /**
+     * Sets up Activity lifecycle handling for the WebView.
+     *
+     * Responds to Activity lifecycle events:
+     * - onPause: Pauses WebView rendering and timers
+     * - onResume: Resumes WebView rendering and timers
+     * - onDestroy: Destroys WebView and releases resources
+     */
+    @MainThread
+    private fun setupLifecycleHandling(activity: Activity) {
+        val callbacks = object : Application.ActivityLifecycleCallbacks {
+            override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {}
+
+            override fun onActivityStarted(activity: Activity) {}
+
+            override fun onActivityResumed(activity: Activity) {
+                if (activity === activityRef.get()) {
+                    runOnUiThread {
+                        BrowserLogger.d(SUBTAG, "Activity resumed, resuming WebView")
+                        webView?.onResume()
+                        webView?.resumeTimers()
+                    }
+                }
+            }
+
+            override fun onActivityPaused(activity: Activity) {
+                if (activity === activityRef.get()) {
+                    runOnUiThread {
+                        BrowserLogger.d(SUBTAG, "Activity paused, pausing WebView")
+                        webView?.onPause()
+                        webView?.pauseTimers()
+                    }
+                }
+            }
+
+            override fun onActivityStopped(activity: Activity) {}
+
+            override fun onActivitySaveInstanceState(activity: Activity, outState: Bundle) {}
+
+            override fun onActivityDestroyed(activity: Activity) {
+                if (activity === activityRef.get()) {
+                    BrowserLogger.d(SUBTAG, "Activity destroyed, destroying WebView")
+                    destroy()
+                }
+            }
+        }
+        activity.application.registerActivityLifecycleCallbacks(callbacks)
+        lifecycleCallbacks = callbacks
     }
 
     private companion object {

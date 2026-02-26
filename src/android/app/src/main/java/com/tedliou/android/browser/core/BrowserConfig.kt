@@ -11,6 +11,7 @@ package com.tedliou.android.browser.core
  * @property alignment Position alignment on screen (e.g., CENTER, TOP_LEFT, BOTTOM_RIGHT)
  * @property closeOnTapOutside If true, browser closes when user taps outside the browser area
  * @property deepLinkPatterns List of URL regex patterns to intercept and handle as deep links
+ * @property closeOnDeepLink If true, closes the browser after a deep link is intercepted
  * @property enableJavaScript If true, JavaScript execution is enabled in WebView
  * @property userAgent Custom User-Agent string; if empty, system default is used
  */
@@ -21,6 +22,7 @@ data class BrowserConfig(
     val alignment: Alignment = Alignment.CENTER,
     val closeOnTapOutside: Boolean = false,
     val deepLinkPatterns: List<String> = emptyList(),
+    val closeOnDeepLink: Boolean = true,
     val enableJavaScript: Boolean = true,
     val userAgent: String = "",
 ) {
