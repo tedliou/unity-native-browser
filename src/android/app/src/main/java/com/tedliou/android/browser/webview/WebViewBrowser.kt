@@ -133,6 +133,31 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         }
     }
 
+    fun executeJavaScript(script: String, requestId: String?) {
+        val current = webView
+        val bridge = jsBridge
+        if (current == null || bridge == null) {
+            BrowserLogger.w(SUBTAG, "WebView not initialized; cannot execute JavaScript")
+            requestId?.let { callback?.onJsResult(it, null) }
+            return
+        }
+        val safeRequestId = requestId ?: run {
+            BrowserLogger.w(SUBTAG, "requestId is null; using default id")
+            DEFAULT_REQUEST_ID
+        }
+        bridge.executeJavaScript(current, script, safeRequestId)
+    }
+
+    fun injectJavaScript(script: String) {
+        val current = webView
+        val bridge = jsBridge
+        if (current == null || bridge == null) {
+            BrowserLogger.w(SUBTAG, "WebView not initialized; cannot inject JavaScript")
+            return
+        }
+        bridge.injectJavaScript(current, script)
+    }
+
     /**
      * Returns true if the WebView is attached to the window.
      */
@@ -433,5 +458,6 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private companion object {
         private const val SUBTAG = "WebView"
         private const val UNKNOWN_ERROR_CODE = -1
+        private const val DEFAULT_REQUEST_ID = "no_request_id"
     }
 }
