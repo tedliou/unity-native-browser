@@ -3,7 +3,9 @@ package com.tedliou.android.browser.webview
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.os.Looper
+import android.view.View
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.webkit.ConsoleMessage
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
@@ -31,6 +33,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private var webView: WebView? = null
     private var callback: BrowserCallback? = null
     private var jsBridge: JsBridge? = null
+    private var overlayView: View? = null
 
     /**
      * Opens the WebView with the provided configuration.
@@ -58,9 +61,46 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             val createdWebView = WebView(activity.applicationContext)
             configureWebView(createdWebView, config)
             jsBridge?.addJavaScriptInterface(createdWebView)
-            attachToDecorView(activity, createdWebView)
+            val layoutParams = WebViewLayoutManager.calculateLayoutParams(
+                config,
+                activity.resources.displayMetrics,
+            )
+            val overlay = WebViewLayoutManager.createOverlayView(activity, config)
+            attachToDecorView(activity, createdWebView, layoutParams, overlay)
+            overlayView = overlay
             createdWebView.loadUrl(config.url)
             webView = createdWebView
+        }
+    }
+
+    fun updateLayout(config: BrowserConfig) {
+        runOnUiThread {
+            val activity = activityRef.get()
+            if (activity == null) {
+                BrowserLogger.w(SUBTAG, "Activity reference lost; cannot update layout")
+                return@runOnUiThread
+            }
+            val currentWebView = webView ?: return@runOnUiThread
+            val layoutParams = WebViewLayoutManager.calculateLayoutParams(
+                config,
+                activity.resources.displayMetrics,
+            )
+            currentWebView.layoutParams = layoutParams
+            val root = activity.window?.decorView as? FrameLayout
+            if (root == null) {
+                BrowserLogger.e(SUBTAG, "DecorView is not a FrameLayout; cannot update overlay")
+                return@runOnUiThread
+            }
+            val overlay = WebViewLayoutManager.createOverlayView(activity, config)
+            if (overlay == null) {
+                overlayView?.let { existing ->
+                    root.removeView(existing)
+                }
+                overlayView = null
+            } else if (overlayView == null) {
+                overlayView = overlay
+                root.addView(overlay, 0)
+            }
         }
     }
 
@@ -130,6 +170,10 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             }
             return
         }
+        overlayView?.let { overlay ->
+            (overlay.parent as? ViewGroup)?.removeView(overlay)
+        }
+        overlayView = null
         (current.parent as? ViewGroup)?.removeView(current)
         current.stopLoading()
         current.clearHistory()
@@ -143,6 +187,10 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     @MainThread
     private fun destroyInternal() {
         val current = webView ?: return
+        overlayView?.let { overlay ->
+            (overlay.parent as? ViewGroup)?.removeView(overlay)
+        }
+        overlayView = null
         (current.parent as? ViewGroup)?.removeView(current)
         current.stopLoading()
         current.clearHistory()
@@ -153,19 +201,23 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     @MainThread
-    private fun attachToDecorView(activity: Activity, view: WebView) {
-        val root = activity.window?.decorView as? ViewGroup
+    private fun attachToDecorView(
+        activity: Activity,
+        view: WebView,
+        layoutParams: FrameLayout.LayoutParams,
+        overlay: View?,
+    ) {
+        val root = activity.window?.decorView as? FrameLayout
         if (root == null) {
-            BrowserLogger.e(SUBTAG, "DecorView is not a ViewGroup; cannot attach WebView")
+            BrowserLogger.e(SUBTAG, "DecorView is not a FrameLayout; cannot attach WebView")
             callback?.onError(
-                BrowserException.InitializationException("DecorView is not a ViewGroup")
+                BrowserException.InitializationException("DecorView is not a FrameLayout")
             )
             return
         }
-        val layoutParams = ViewGroup.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.MATCH_PARENT,
-        )
+        if (overlay != null) {
+            root.addView(overlay)
+        }
         root.addView(view, layoutParams)
     }
 
