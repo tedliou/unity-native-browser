@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #d32f2f;
+        }
+        .error-section {
+            background-color: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+            border-left: 4px solid #d32f2f;
+        }
+        .warning {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <h1>Error Test Page</h1>
+    
+    <div class="warning">
+        This page intentionally triggers various WebView errors for testing error handling.
+    </div>
+    
+    <div class="error-section">
+        <h3>Invalid Image Resource</h3>
+        <img src="invalid_image_that_does_not_exist.png" alt="This will fail to load">
+    </div>
+    
+    <div class="error-section">
+        <h3>Invalid CSS Resource</h3>
+        <link rel="stylesheet" href="invalid_stylesheet.css">
+    </div>
+    
+    <div class="error-section">
+        <h3>Invalid Script Resource</h3>
+        <script src="invalid_script.js"></script>
+    </div>
+    
+    <script>
+        // Notify native that page loaded (even with errors)
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'loaded',
+                    data: {
+                        message: 'Error test page loaded (with intentional resource errors)'
+                    }
+                }));
+            }
+        });
+        
+        // Detect image load errors
+        window.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                console.error('Image failed to load:', e.target.src);
+                
+                if (window.NativeBrowserBridge) {
+                    window.NativeBrowserBridge.postMessage(JSON.stringify({
+                        type: 'resourceError',
+                        data: {
+                            resourceType: 'image',
+                            src: e.target.src
+                        }
+                    }));
+                }
+            }
+        }, true);
+        
+        // Intentionally throw a JavaScript error
+        setTimeout(function() {
+            try {
+                // This will throw an error
+                nonExistentFunction();
+            } catch (error) {
+                if (window.NativeBrowserBridge) {
+                    window.NativeBrowserBridge.postMessage(JSON.stringify({
+                        type: 'jsError',
+                        data: {
+                            message: error.message,
+                            name: error.name
+                        }
+                    }));
+                }
+            }
+        }, 100);
+    </script>
+</body>
+</html>

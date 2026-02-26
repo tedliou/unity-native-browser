@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mock Basic Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Basic Test Page</h1>
+    <div class="status" id="status">Loading...</div>
+    
+    <script>
+        // Send PostMessage when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('status').textContent = 'Page loaded successfully';
+            
+            // Send PostMessage to native bridge
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'loaded',
+                    data: {
+                        title: document.title,
+                        timestamp: new Date().toISOString()
+                    }
+                }));
+            }
+        });
+    </script>
+</body>
+</html>

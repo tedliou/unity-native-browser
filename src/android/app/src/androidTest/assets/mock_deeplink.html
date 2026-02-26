@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Link Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .link-section {
+            background-color: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        a {
+            display: block;
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+        a:hover {
+            background-color: #45a049;
+        }
+        .warning {
+            background-color: #ff9800;
+        }
+        .warning:hover {
+            background-color: #f57c00;
+        }
+        .info {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Deep Link Test</h1>
+    
+    <div class="info">
+        Click the links below to test deep link interception and handling.
+    </div>
+    
+    <div class="link-section">
+        <h3>Success Callback</h3>
+        <a href="myapp://callback?result=success">Success Deep Link</a>
+    </div>
+    
+    <div class="link-section">
+        <h3>Error Callback</h3>
+        <a href="myapp://callback?result=error&message=TestError" class="warning">Error Deep Link</a>
+    </div>
+    
+    <div class="link-section">
+        <h3>Custom Action</h3>
+        <a href="myapp://action?type=close">Close Action Deep Link</a>
+    </div>
+    
+    <div class="link-section">
+        <h3>With Parameters</h3>
+        <a href="myapp://callback?result=success&token=abc123&userId=456">Deep Link with Parameters</a>
+    </div>
+    
+    <div class="link-section">
+        <h3>Normal Link (should not trigger deep link)</h3>
+        <a href="#normal" style="background-color: #9E9E9E;">Normal Fragment Link</a>
+    </div>
+    
+    <script>
+        // Log link clicks
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                const href = e.target.getAttribute('href');
+                
+                if (window.NativeBrowserBridge) {
+                    window.NativeBrowserBridge.postMessage(JSON.stringify({
+                        type: 'linkClicked',
+                        data: {
+                            href: href,
+                            timestamp: new Date().toISOString()
+                        }
+                    }));
+                }
+            }
+        });
+        
+        // Notify when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'loaded',
+                    data: {
+                        message: 'Deep link test page ready'
+                    }
+                }));
+            }
+        });
+    </script>
+</body>
+</html>

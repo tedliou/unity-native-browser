@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostMessage Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #1976D2;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <h1>PostMessage Test</h1>
+    <button id="sendButton">Send PostMessage</button>
+    <div class="log" id="log"></div>
+    
+    <script>
+        let messageCount = 0;
+        
+        function addLog(message) {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = new Date().toLocaleTimeString() + ' - ' + message;
+            logDiv.insertBefore(entry, logDiv.firstChild);
+        }
+        
+        document.getElementById('sendButton').addEventListener('click', function() {
+            messageCount++;
+            
+            const payload = {
+                type: 'buttonClicked',
+                data: {
+                    count: messageCount,
+                    timestamp: new Date().toISOString(),
+                    message: 'Button clicked ' + messageCount + ' times'
+                }
+            };
+            
+            addLog('Sending message #' + messageCount);
+            
+            // Send PostMessage to native bridge
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify(payload));
+                addLog('Message sent to native bridge');
+            } else {
+                addLog('ERROR: NativeBrowserBridge not available');
+            }
+        });
+        
+        // Log when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            addLog('Page loaded and ready');
+            
+            // Send initial PostMessage
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'loaded',
+                    data: {
+                        title: document.title
+                    }
+                }));
+            }
+        });
+    </script>
+</body>
+</html>

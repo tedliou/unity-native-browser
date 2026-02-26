@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Execution Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .info {
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+        .function-list {
+            background-color: white;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        code {
+            background-color: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="pageTitle">JS Execution Test</h1>
+    
+    <div class="info">
+        This page provides functions callable from native code via evaluateJavascript().
+    </div>
+    
+    <div class="function-list">
+        <h3>Available Functions:</h3>
+        <ul>
+            <li><code>getValue()</code> - Returns the number 42</li>
+            <li><code>setTitle(title)</code> - Sets the page title to the provided string</li>
+            <li><code>getPageInfo()</code> - Returns JSON with page information</li>
+            <li><code>multiply(a, b)</code> - Returns the product of two numbers</li>
+        </ul>
+    </div>
+    
+    <script>
+        // Function that returns a simple value
+        function getValue() {
+            return 42;
+        }
+        
+        // Function that modifies the page
+        function setTitle(title) {
+            document.title = title;
+            document.getElementById('pageTitle').textContent = title;
+            return true;
+        }
+        
+        // Function that returns complex data
+        function getPageInfo() {
+            return {
+                title: document.title,
+                url: window.location.href,
+                timestamp: new Date().toISOString(),
+                readyState: document.readyState
+            };
+        }
+        
+        // Function with multiple parameters
+        function multiply(a, b) {
+            return a * b;
+        }
+        
+        // Notify native that page is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'ready',
+                    data: {
+                        message: 'Functions are available for execution'
+                    }
+                }));
+            }
+        });
+    </script>
+</body>
+</html>

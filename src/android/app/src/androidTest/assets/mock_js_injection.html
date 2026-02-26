@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS Injection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        #injectedContent {
+            padding: 15px;
+            margin-top: 10px;
+            border: 2px dashed #ddd;
+            min-height: 50px;
+        }
+        .placeholder {
+            color: #999;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>JS Injection Test</h1>
+    
+    <div class="container">
+        <p>This is a blank page for testing JavaScript injection from native code.</p>
+        <p>Native code can inject scripts that will execute in this context.</p>
+        
+        <div id="injectedContent" class="placeholder">
+            (Content will appear here when JavaScript is injected)
+        </div>
+    </div>
+    
+    <script>
+        // Minimal script - most functionality will be injected from native
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(JSON.stringify({
+                    type: 'ready',
+                    data: {
+                        message: 'Page ready for JS injection'
+                    }
+                }));
+            }
+        });
+        
+        // Helper function that can be called by injected scripts
+        function displayInjectedContent(content) {
+            const div = document.getElementById('injectedContent');
+            div.innerHTML = content;
+            div.className = '';
+        }
+    </script>
+</body>
+</html>
