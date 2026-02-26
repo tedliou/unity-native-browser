@@ -1,0 +1,39 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.~*
+
+# IDE files
+.idea/
+.vs/
+*.user
+*.userprefs
+*.sln
+*.pidb
+*.booproj
+*.suo
+.vscode/
+*.code-workspace
+
+# IDE metadata
+.classpath
+.project
+.settings/
+
+# OS-specific
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+env/
+venv/
