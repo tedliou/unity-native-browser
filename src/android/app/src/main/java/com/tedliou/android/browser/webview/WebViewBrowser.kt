@@ -30,6 +30,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private val activityRef = WeakReference(activity)
     private var webView: WebView? = null
     private var callback: BrowserCallback? = null
+    private var jsBridge: JsBridge? = null
 
     /**
      * Opens the WebView with the provided configuration.
@@ -53,8 +54,10 @@ class WebViewBrowser(activity: Activity) : IBrowser {
                 )
                 return@runOnUiThread
             }
+            jsBridge = JsBridge(activity, callback)
             val createdWebView = WebView(activity.applicationContext)
             configureWebView(createdWebView, config)
+            jsBridge?.addJavaScriptInterface(createdWebView)
             attachToDecorView(activity, createdWebView)
             createdWebView.loadUrl(config.url)
             webView = createdWebView
@@ -131,6 +134,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         current.stopLoading()
         current.clearHistory()
         webView = null
+        jsBridge = null
         if (notifyClosed) {
             callback?.onClosed()
         }
@@ -145,6 +149,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         current.removeAllViews()
         current.destroy()
         webView = null
+        jsBridge = null
     }
 
     @MainThread
@@ -199,6 +204,10 @@ class WebViewBrowser(activity: Activity) : IBrowser {
                 val safeUrl = url.orEmpty()
                 BrowserLogger.d(SUBTAG, "Page finished: $safeUrl")
                 callback?.onPageFinished(safeUrl)
+                val currentView = view
+                if (currentView != null) {
+                    jsBridge?.injectPostMessageBridge(currentView)
+                }
             }
 
             override fun onReceivedError(
