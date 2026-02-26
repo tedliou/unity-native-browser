@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.library)
+    jacoco
 }
 
 android {
@@ -29,6 +30,60 @@ android {
     }
     kotlin {
         jvmToolchain(11)
+    }
+}
+
+jacoco {
+    toolVersion = libs.versions.jacoco.get()
+}
+
+tasks.register<JacocoReport>("jacocoTestReport") {
+    dependsOn("testDebugUnitTest")
+    group = "verification"
+    description = "Generate JaCoCo coverage report for unit tests"
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+    }
+
+    val sourceDirs = listOf("src/main/java", "src/main/kotlin")
+    sourceDirectories.setFrom(sourceDirs.map { file(it) })
+    classDirectories.setFrom(
+        fileTree("build/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") {
+            exclude(
+                "**/R.class",
+                "**/R${'$'}*.class",
+                "**/BuildConfig.*",
+                "**/Manifest*.*",
+                "**/*Test*.*",
+                "android/**/*.*"
+            )
+        }
+    )
+    executionData.setFrom("${layout.buildDirectory.get()}/jacoco/testDebugUnitTest.exec")
+}
+
+tasks.register<Task>("jacocoTestCoverageVerification") {
+    dependsOn("jacocoTestReport")
+    group = "verification"
+    description = "Verify JaCoCo code coverage meets 85% threshold"
+
+    doLast {
+        val reportTask = tasks.getByName("jacocoTestReport") as JacocoReport
+        val xmlFile = reportTask.reports.xml.outputLocation.get().asFile
+        if (xmlFile.exists()) {
+            val xmlContent = xmlFile.readText()
+            val lineRatePattern = """linerate="([^"]+)""".toRegex()
+            val matches = lineRatePattern.findAll(xmlContent)
+            matches.lastOrNull()?.let {
+                val coveragePercent = (it.groupValues[1].toDouble() * 100).toInt()
+                println("\n✓ JaCoCo Coverage: $coveragePercent%")
+                if (coveragePercent < 85) {
+                    throw GradleException("Coverage $coveragePercent% is below 85% threshold")
+                }
+            } ?: println("\n✗ No coverage data found in XML report")
+        }
     }
 }
 
