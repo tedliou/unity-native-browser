@@ -1,0 +1,18 @@
+{
+    "name": "TedLiou.Demo",
+    "rootNamespace": "TedLiou.Demo",
+    "references": [
+        "TedLiou.NativeBrowser",
+        "Unity.TextMeshPro",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
