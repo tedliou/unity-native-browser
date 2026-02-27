@@ -254,5 +254,14 @@ namespace TedLiou.NativeBrowser
         {
             Debug.LogWarning($"NativeBrowser: {methodName} is Android-only and was called in editor or non-Android platform");
         }
+
+        // Internal raise helpers — allow NativeBrowserCallbackReceiver (same assembly) to fire events
+        internal static void RaiseOnPageStarted(string url)   => OnPageStarted?.Invoke(url);
+        internal static void RaiseOnPageFinished(string url)  => OnPageFinished?.Invoke(url);
+        internal static void RaiseOnError(string msg, string url) => OnError?.Invoke(msg, url);
+        internal static void RaiseOnPostMessage(string msg)   => OnPostMessage?.Invoke(msg);
+        internal static void RaiseOnJsResult(string rid, string res) => OnJsResult?.Invoke(rid, res);
+        internal static void RaiseOnDeepLink(string url)      => OnDeepLink?.Invoke(url);
+        internal static void RaiseOnClosed()                  => OnClosed?.Invoke();
     }
 }
