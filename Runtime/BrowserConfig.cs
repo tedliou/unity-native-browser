@@ -51,5 +51,6 @@ namespace TedLiou.NativeBrowser
             public bool enableJavaScript;
             public string userAgent;
             public List<string> deepLinkPatterns;
+        }
     }
 }

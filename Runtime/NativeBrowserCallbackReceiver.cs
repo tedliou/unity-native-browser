@@ -48,7 +48,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<UrlMessage>(json);
-                NativeBrowser.OnPageStarted?.Invoke(data.url);
+                NativeBrowser.RaiseOnPageStarted(data.url);
             }
             catch (Exception ex)
             {
@@ -67,7 +67,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<UrlMessage>(json);
-                NativeBrowser.OnPageFinished?.Invoke(data.url);
+                NativeBrowser.RaiseOnPageFinished(data.url);
             }
             catch (Exception ex)
             {
@@ -86,7 +86,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<ErrorMessage>(json);
-                NativeBrowser.OnError?.Invoke(data.message, data.url);
+                NativeBrowser.RaiseOnError(data.message, data.url);
             }
             catch (Exception ex)
             {
@@ -105,7 +105,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<PostMessageData>(json);
-                NativeBrowser.OnPostMessage?.Invoke(data.message);
+                NativeBrowser.RaiseOnPostMessage(data.message);
             }
             catch (Exception ex)
             {
@@ -124,7 +124,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<JsResultData>(json);
-                NativeBrowser.OnJsResult?.Invoke(data.requestId, data.result);
+                NativeBrowser.RaiseOnJsResult(data.requestId, data.result);
             }
             catch (Exception ex)
             {
@@ -143,7 +143,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 var data = JsonUtility.FromJson<UrlMessage>(json);
-                NativeBrowser.OnDeepLink?.Invoke(data.url);
+                NativeBrowser.RaiseOnDeepLink(data.url);
             }
             catch (Exception ex)
             {
@@ -162,7 +162,7 @@ namespace TedLiou.NativeBrowser
             try
             {
                 // OnClosed doesn't need data parsing - just fire the event
-                NativeBrowser.OnClosed?.Invoke();
+                NativeBrowser.RaiseOnClosed();
             }
             catch (Exception ex)
             {
