@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2026-02-28
+
+### Fixed
+
+- Fix malformed `IPlatformBridge.cs.meta` preventing Unity from recognizing the script (invalid GUID, missing MonoImporter section)
+- Fix `NativeBrowserDeps.androidlib/build.gradle` missing Android library plugin and `android {}` block, causing Gradle dependency resolution to fail during Unity APK build
+- Fix malformed `NativeBrowser.aar.meta` missing PluginImporter section, preventing Unity from loading the .aar as an Android plugin
+- Remove orphaned `NativeBrowser.aar.meta` from wrong path (`Runtime/Plugins/Android/`)
+
 ## [1.0.1] - 2025-06-08
 
 ### Added
