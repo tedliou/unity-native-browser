@@ -92,6 +92,16 @@ namespace TedLiou.NativeBrowser
             bridge.InjectJavaScript(script);
         }
 
+        /// <summary>
+        /// Send a message to web content in the currently open WebView via JavaScript postMessage.
+        /// Only works when the current browser is a WebView.
+        /// </summary>
+        /// <param name="message">The message string to send to web content.</param>
+        public static void SendPostMessage(string message)
+        {
+            bridge.SendPostMessage(message);
+        }
+
         public static bool IsOpen
         {
             get

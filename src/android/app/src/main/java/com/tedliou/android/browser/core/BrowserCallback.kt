@@ -31,9 +31,9 @@ interface BrowserCallback {
     /**
      * Called when JavaScript posts a message from web content.
      *
-     * Message format is JSON: `{type: string, data: any}`
+     * The raw string posted from web content via postMessage.
      *
-     * @param message JSON string containing type and data
+     * @param message Raw string from web content
      */
     fun onPostMessage(message: String)
 

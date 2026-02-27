@@ -150,6 +150,31 @@ namespace TedLiou.NativeBrowser.Internal
         }
 
         /// <summary>
+        /// Send a message to the web content via JavaScript postMessage.
+        /// </summary>
+        public void SendPostMessage(string message)
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+            if (string.IsNullOrEmpty(message))
+            {
+                Debug.LogWarning("NativeBrowser: SendPostMessage called with null or empty message");
+                return;
+            }
+            try
+            {
+                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
+                {
+                    bridgeClass.CallStatic("sendPostMessage", message);
+                }
+            }
+            catch (Exception exception)
+            {
+                Debug.LogWarning($"NativeBrowser: SendPostMessage failed: {exception.Message}");
+            }
+#endif
+        }
+
+        /// <summary>
         /// Check if a browser is currently open.
         /// </summary>
         public bool IsOpen()

@@ -33,6 +33,7 @@ Static class for controlling the browser instance.
 | `Refresh()` | Refreshes the current WebView page. No-op for other browser types. |
 | `ExecuteJavaScript(string script, Action<string, string> callback = null)` | Runs JavaScript in the WebView and returns the result through a callback. |
 | `InjectJavaScript(string script)` | Injects JavaScript into the WebView's global scope. |
+| `SendPostMessage(string message)` | Sends a message to web content via JavaScript postMessage. WebView only. |
 
 ## BrowserConfig Class
 
@@ -104,12 +105,52 @@ Events triggered by the browser and passed to `NativeBrowserCallbackReceiver`.
 
 ## PostMessage Protocol
 
-To communicate from a web page to Unity:
+### Web → Unity (Receiving Messages)
 
-1. The page calls the native interface:
+Web content can send messages back to Unity as plain strings or JSON strings. Any non-empty string is supported.
+
+There are two ways to send messages from JavaScript:
+
+1. **Intercepted postMessage**: Use the standard web `window.postMessage` API. Our bridge script intercepts these calls and forwards them to Unity.
    ```javascript
-   window.NativeBrowser.postMessage(jsonString);
+   // Send a plain string
+   window.postMessage("Hello from Web", "*");
+
+   // Send a JSON string
+   window.postMessage(JSON.stringify({ type: "LOGIN", user: "Alice" }), "*");
    ```
 
-2. Unity receives this via the `OnPostMessage` callback in `NativeBrowserCallbackReceiver`.
-3. The `jsonString` should be a valid JSON to be parsed using `JsonUtility.FromJson`.
+2. **Direct Bridge call**: Call the bridge interface directly for slightly better performance.
+   ```javascript
+   window.NativeBrowserBridge.postMessage("Direct message");
+   ```
+
+Unity receives these messages through the `OnPostMessage` event in your `NativeBrowserCallbackReceiver` implementation:
+
+```csharp
+protected override void OnPostMessage(string message)
+{
+    Debug.Log("Received from web: " + message);
+    // If it's JSON, parse it:
+    // var data = JsonUtility.FromJson<MyData>(message);
+}
+```
+
+### Unity → Web (Sending Messages)
+
+Unity can send messages to the web page using the `SendPostMessage` method. This triggers a `message` event on the web page's `window` object.
+
+```csharp
+// From Unity
+NativeBrowser.SendPostMessage("Hello from Unity!");
+// Or send JSON
+NativeBrowser.SendPostMessage(JsonUtility.ToJson(new MyData { status = "ok" }));
+```
+
+The web page listens for these messages using a standard event listener:
+
+```javascript
+window.addEventListener('message', (event) => {
+    console.log("Received from Unity:", event.data);
+});
+```

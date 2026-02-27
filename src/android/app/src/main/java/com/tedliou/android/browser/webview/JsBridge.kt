@@ -7,8 +7,6 @@ import android.webkit.WebView
 import com.tedliou.android.browser.core.BrowserCallback
 import com.tedliou.android.browser.util.BrowserLogger
 import java.lang.ref.WeakReference
-import org.json.JSONException
-import org.json.JSONObject
 
 class JsBridge(
     activity: Activity,
@@ -23,19 +21,8 @@ class JsBridge(
             BrowserLogger.w(SUBTAG, "postMessage received empty payload")
             return
         }
-        val json = try {
-            JSONObject(trimmed)
-        } catch (e: JSONException) {
-            BrowserLogger.w(SUBTAG, "Invalid JSON in postMessage: ${e.message}")
-            return
-        }
-        val type = json.optString("type", "").trim()
-        if (type.isEmpty()) {
-            BrowserLogger.w(SUBTAG, "postMessage missing type field")
-            return
-        }
         runOnUiThread {
-            BrowserLogger.d(SUBTAG, "postMessage type=$type len=${trimmed.length}")
+            BrowserLogger.d(SUBTAG, "postMessage len=${trimmed.length}")
             callback?.onPostMessage(trimmed)
         }
     }
@@ -111,6 +98,31 @@ class JsBridge(
         injectJavaScript(webView, POST_MESSAGE_BRIDGE_SCRIPT)
     }
 
+    /**
+     * Send a message from native to web content via JavaScript postMessage.
+     *
+     * The message is delivered to the WebView by evaluating a script that calls
+     * window.postMessage with the provided string.
+     *
+     * @param webView The WebView to send the message to
+     * @param message The message string to send
+     */
+    fun sendPostMessage(webView: WebView, message: String) {
+        val trimmed = message.trim()
+        if (trimmed.isEmpty()) {
+            BrowserLogger.w(SUBTAG, "sendPostMessage called with empty message")
+            return
+        }
+        val escaped = trimmed
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\n", "\\n")
+            .replace("\r", "\\r")
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029")
+        injectJavaScript(webView, "window.postMessage('$escaped', '*');")
+    }
+
     private fun runOnUiThread(block: () -> Unit) {
         val activity = activityRef.get()
         if (activity == null) {
@@ -146,7 +158,7 @@ class JsBridge(
               var originalPostMessage = window.postMessage;
               window.postMessage = function(message, targetOrigin) {
                 if (window.${INTERFACE_NAME}) {
-                  window.${INTERFACE_NAME}.postMessage(JSON.stringify(message));
+                  window.${INTERFACE_NAME}.postMessage(typeof message === 'string' ? message : JSON.stringify(message));
                 }
                 return originalPostMessage.apply(this, arguments);
               };

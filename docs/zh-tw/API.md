@@ -33,6 +33,7 @@
 | `Refresh()` | 重新整理當前的 WebView 頁面。對其他類型的瀏覽器無效。 |
 | `ExecuteJavaScript(string script, Action<string, string> callback = null)` | 在 WebView 中執行 JavaScript 並透過回調函數回傳結果。 |
 | `InjectJavaScript(string script)` | 將 JavaScript 注入到 WebView 的全域作用域。 |
+| `SendPostMessage(string message)` | 透過 JavaScript postMessage 向網頁內容發送訊息。僅限 WebView。 |
 
 ## BrowserConfig 類別
 
@@ -104,12 +105,42 @@ WebView 在螢幕區域內的對齊選項。
 
 ## PostMessage 協議
 
-從網頁端向 Unity 發送訊息：
+### 網頁 → Unity（接收訊息）
 
-1. 網頁端呼叫原生介面：
+網頁端可以向 Unity 發送任何非空字串訊息。支援以下兩種呼叫路徑：
+
+1. **透過橋接腳本攔截**：使用標準的 `window.postMessage`。橋接器會自動攔截發送至視窗的訊息。
    ```javascript
-   window.NativeBrowser.postMessage(jsonString);
+   window.postMessage("Hello from Web", "*");
+   // 也可以發送 JSON 字串
+   window.postMessage(JSON.stringify({ type: "LOGIN", token: "abc" }), "*");
    ```
+2. **直接呼叫橋接介面**：使用 `window.NativeBrowserBridge.postMessage` 直接與原生層通訊。
+   ```javascript
+   window.NativeBrowserBridge.postMessage("Direct message from Web");
+   ```
+Unity 端透過 `NativeBrowserCallbackReceiver` 中的 `OnPostMessage` 事件接收原始字串：
 
-2. Unity 透過 `NativeBrowserCallbackReceiver` 中的 `OnPostMessage` 回調接收此訊息。
-3. `jsonString` 應為有效的 JSON，以便使用 `JsonUtility.FromJson` 進行解析。
+```csharp
+protected override void OnPostMessage(string message)
+{
+    Debug.Log("收到來自網頁的訊息: " + message);
+    // 如果是 JSON，可使用 JsonUtility 解析
+    // var data = JsonUtility.FromJson<MyData>(message);
+}
+```
+
+### Unity → 網頁（發送訊息）
+
+Unity 可以使用 `NativeBrowser.SendPostMessage(message)` 向網頁發送訊息。這會在網頁端的 `window` 物件上觸發 `message` 事件。
+
+Unity 端發送：
+```csharp
+NativeBrowser.SendPostMessage("Hello from Unity");
+```
+網頁端監聽：
+```javascript
+window.addEventListener('message', (event) => {
+    console.log("收到來自 Unity 的訊息:", event.data);
+});
+```

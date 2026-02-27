@@ -44,5 +44,10 @@ namespace TedLiou.NativeBrowser.Internal
         {
             Debug.LogWarning($"NativeBrowser: InjectJavaScript is Android-only and was called in editor or non-Android platform");
         }
+
+        public void SendPostMessage(string message)
+        {
+            Debug.LogWarning($"NativeBrowser: SendPostMessage is Android-only and was called in editor or non-Android platform");
+        }
     }
 }

@@ -159,6 +159,21 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
+     * Send a message from Unity to web content via JavaScript postMessage.
+     *
+     * @param message The message string to send to web content
+     */
+    fun sendPostMessage(message: String) {
+        val current = webView
+        val bridge = jsBridge
+        if (current == null || bridge == null) {
+            BrowserLogger.w(SUBTAG, "WebView not initialized; cannot send postMessage")
+            return
+        }
+        bridge.sendPostMessage(current, message)
+    }
+
+    /**
      * Returns true if the WebView is attached to the window.
      */
     override fun isOpen(): Boolean {

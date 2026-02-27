@@ -113,20 +113,38 @@ NativeBrowser.InjectJavaScript("window.MyApp = { version: '1.0' };");
 ```
 
 ### PostMessage 通訊
-網頁端可以使用 `window.NativeBrowser.postMessage(jsonString)` 與 Unity 通訊。
+網頁與 Unity 可以透過 PostMessage 進行雙向訊息交換。
+
+**網頁 → Unity**
+網頁端可以使用 `window.postMessage(message, '*')`（由橋接腳本攔截）或 `window.NativeBrowserBridge.postMessage(message)`（直接呼叫）與 Unity 通訊。接受任何非空字串。
 
 ```javascript
-// 網頁端
-window.NativeBrowser.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", token: "xyz123" }));
+// 傳送純字串
+window.NativeBrowserBridge.postMessage("hello from web");
+
+// 傳送 JSON 字串
+window.NativeBrowserBridge.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", token: "xyz123" }));
 ```
 
 ```csharp
-// Unity 端 (在您的回調接收器中)
+// Unity 端接收原始字串
 protected override void OnPostMessage(string message)
 {
-    var data = JsonUtility.FromJson<MyMessageData>(message);
-    Debug.Log("收到 Token: " + data.token);
+    Debug.Log("收到訊息: " + message);
 }
+```
+
+**Unity → 網頁**
+使用 `NativeBrowser.SendPostMessage(message)` 將字串傳送至網頁。
+
+```csharp
+NativeBrowser.SendPostMessage("hello from Unity");
+```
+
+```javascript
+window.addEventListener('message', function(e) {
+    console.log("收到 Unity 訊息:", e.data);
+});
 ```
 
 ### 尺寸與對齊方式

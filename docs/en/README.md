@@ -109,22 +109,40 @@ NativeBrowser.InjectJavaScript("window.MyApp = { version: '1.0' };");
 ```
 
 ### PostMessage Communication
-The web page can communicate with Unity using `window.NativeBrowser.postMessage(jsonString)`.
+Web pages and Unity can exchange messages bidirectionally using PostMessage.
+
+**Web → Unity**
+The web page sends a message using either `window.postMessage(message, '*')` (intercepted by the bridge script) or `window.NativeBrowserBridge.postMessage(message)` (direct call). Any non-empty string is accepted.
 
 ```javascript
-// Web side
-window.NativeBrowser.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", token: "xyz123" }));
+// Web side - sending string or JSON
+window.postMessage("hello from web", "*");
+window.NativeBrowserBridge.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", token: "xyz123" }));
 ```
 
 ```csharp
 // Unity side (inside your callback receiver)
 protected override void OnPostMessage(string message)
 {
-    var data = JsonUtility.FromJson<MyMessageData>(message);
-    Debug.Log("Received token: " + data.token);
+    // message contains the raw string from web
+    Debug.Log("Received from web: " + message);
 }
 ```
 
+**Unity → Web**
+Use `NativeBrowser.SendPostMessage(message)` to send a string to the web page.
+
+```csharp
+// Unity side
+NativeBrowser.SendPostMessage("hello from Unity");
+```
+
+```javascript
+// Web side
+window.addEventListener('message', function(e) {
+    console.log(e.data); // "hello from Unity"
+});
+```
 ### Sizing and Alignment
 WebView supports fractional sizing (0.0 to 1.0) relative to the screen.
 

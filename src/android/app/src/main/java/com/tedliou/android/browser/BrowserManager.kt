@@ -125,6 +125,24 @@ object BrowserManager {
     }
 
     /**
+     * Send a message from Unity to web content in the currently open WebView.
+     *
+     * The message is delivered via JavaScript postMessage. Only works when the
+     * current browser is a WebView; logs a warning otherwise.
+     *
+     * @param message The message string to send to web content
+     */
+    @JvmStatic
+    fun sendPostMessage(message: String) {
+        val browser = currentBrowser
+        if (browser is WebViewBrowser) {
+            browser.sendPostMessage(message)
+        } else {
+            BrowserLogger.w(SUBTAG, "sendPostMessage only available for WebView type")
+        }
+    }
+
+    /**
      * Check if any browser instance is currently open.
      *
      * @return true if a browser is open, false otherwise

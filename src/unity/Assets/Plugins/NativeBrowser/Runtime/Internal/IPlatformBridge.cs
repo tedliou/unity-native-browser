@@ -52,5 +52,12 @@ namespace TedLiou.NativeBrowser.Internal
         /// </summary>
         /// <param name="script">The JavaScript code to inject and execute.</param>
         void InjectJavaScript(string script);
+
+        /// <summary>
+        /// Send a message to the web content via JavaScript postMessage.
+        /// Only works when the current browser is a WebView.
+        /// </summary>
+        /// <param name="message">The message string to send to web content.</param>
+        void SendPostMessage(string message);
     }
 }

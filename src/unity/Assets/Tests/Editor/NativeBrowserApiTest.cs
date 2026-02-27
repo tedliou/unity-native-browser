@@ -25,6 +25,7 @@ namespace TedLiou.NativeBrowser.Tests
             Assert.IsNotNull(type.GetMethod("Refresh", BindingFlags.Public | BindingFlags.Static));
             Assert.IsNotNull(type.GetMethod("ExecuteJavaScript", BindingFlags.Public | BindingFlags.Static));
             Assert.IsNotNull(type.GetMethod("InjectJavaScript", BindingFlags.Public | BindingFlags.Static));
+            Assert.IsNotNull(type.GetMethod("SendPostMessage", BindingFlags.Public | BindingFlags.Static));
         }
 
         [Test]
@@ -159,6 +160,22 @@ namespace TedLiou.NativeBrowser.Tests
             Assert.AreEqual(1, parameters.Length);
             Assert.AreEqual(typeof(string), parameters[0].ParameterType);
             Assert.AreEqual("script", parameters[0].Name);
+        }
+
+        [Test]
+        public void SendPostMessageMethod_HasCorrectSignature()
+        {
+            // Verify SendPostMessage method signature: void SendPostMessage(string message)
+            Type type = typeof(NativeBrowser);
+            MethodInfo sendMethod = type.GetMethod("SendPostMessage", BindingFlags.Public | BindingFlags.Static);
+            
+            Assert.IsNotNull(sendMethod, "SendPostMessage method should exist");
+            Assert.AreEqual(typeof(void), sendMethod.ReturnType);
+            
+            ParameterInfo[] parameters = sendMethod.GetParameters();
+            Assert.AreEqual(1, parameters.Length);
+            Assert.AreEqual(typeof(string), parameters[0].ParameterType);
+            Assert.AreEqual("message", parameters[0].Name);
         }
 
         [Test]

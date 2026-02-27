@@ -43,6 +43,7 @@
 <body>
     <h1>PostMessage Test</h1>
     <button id="sendButton">Send PostMessage</button>
+    <button id="sendPlainButton">Send Plain String</button>
     <div class="log" id="log"></div>
     
     <script>
@@ -74,6 +75,19 @@
             if (window.NativeBrowserBridge) {
                 window.NativeBrowserBridge.postMessage(JSON.stringify(payload));
                 addLog('Message sent to native bridge');
+            } else {
+                addLog('ERROR: NativeBrowserBridge not available');
+            }
+        });
+
+        document.getElementById('sendPlainButton').addEventListener('click', function() {
+            messageCount++;
+            var plainMessage = 'Plain message #' + messageCount;
+            addLog('Sending plain string: ' + plainMessage);
+            
+            if (window.NativeBrowserBridge) {
+                window.NativeBrowserBridge.postMessage(plainMessage);
+                addLog('Plain string sent to native bridge');
             } else {
                 addLog('ERROR: NativeBrowserBridge not available');
             }

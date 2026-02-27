@@ -8,8 +8,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.json.JSONObject
-import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
@@ -32,31 +31,20 @@ class JsBridgeTest {
     }
 
     @Test
-    fun test_postMessage_invalid_json_does_not_invoke_callback() {
+    fun test_postMessage_non_json_string_invokes_callback() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val callback = mockk<BrowserCallback>(relaxed = true)
         val jsBridge = JsBridge(activity, callback)
 
-        jsBridge.postMessage("{invalid json}")
+        val plainString = "hello world"
+        jsBridge.postMessage(plainString)
         shadowOf(Looper.getMainLooper()).idle()
 
-        verify(exactly = 0) { callback.onPostMessage(any()) }
+        verify { callback.onPostMessage(plainString) }
     }
 
     @Test
-    fun test_postMessage_empty_string_does_not_invoke_callback() {
-        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
-        val callback = mockk<BrowserCallback>(relaxed = true)
-        val jsBridge = JsBridge(activity, callback)
-
-        jsBridge.postMessage("")
-        shadowOf(Looper.getMainLooper()).idle()
-
-        verify(exactly = 0) { callback.onPostMessage(any()) }
-    }
-
-    @Test
-    fun test_postMessage_missing_type_field_does_not_invoke_callback() {
+    fun test_postMessage_json_without_type_field_invokes_callback() {
         val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
         val callback = mockk<BrowserCallback>(relaxed = true)
         val jsBridge = JsBridge(activity, callback)
@@ -65,7 +53,7 @@ class JsBridgeTest {
         jsBridge.postMessage(jsonWithoutType)
         shadowOf(Looper.getMainLooper()).idle()
 
-        verify(exactly = 0) { callback.onPostMessage(any()) }
+        verify { callback.onPostMessage(jsonWithoutType) }
     }
 
     @Test
@@ -170,5 +158,44 @@ class JsBridgeTest {
         jsBridge.log("info", "test message")
         jsBridge.log("error", "error message")
         jsBridge.log("debug", "debug message")
+    }
+
+    @Test
+    fun test_sendPostMessage_delegates_to_injectJavaScript() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val callback = mockk<BrowserCallback>(relaxed = true)
+        val jsBridge = JsBridge(activity, callback)
+        val webView = mockk<WebView>(relaxed = true)
+
+        jsBridge.sendPostMessage(webView, "hello from unity")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify { webView.evaluateJavascript(match { it.contains("window.postMessage") && it.contains("hello from unity") }, null) }
+    }
+
+    @Test
+    fun test_sendPostMessage_empty_does_nothing() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val callback = mockk<BrowserCallback>(relaxed = true)
+        val jsBridge = JsBridge(activity, callback)
+        val webView = mockk<WebView>(relaxed = true)
+
+        jsBridge.sendPostMessage(webView, "")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify(exactly = 0) { webView.evaluateJavascript(any(), any()) }
+    }
+
+    @Test
+    fun test_sendPostMessage_escapes_special_characters() {
+        val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
+        val callback = mockk<BrowserCallback>(relaxed = true)
+        val jsBridge = JsBridge(activity, callback)
+        val webView = mockk<WebView>(relaxed = true)
+
+        jsBridge.sendPostMessage(webView, "it's a \"test\"")
+        shadowOf(Looper.getMainLooper()).idle()
+
+        verify { webView.evaluateJavascript(match { it.contains("window.postMessage") && it.contains("it\\'s a") }, null) }
     }
 }

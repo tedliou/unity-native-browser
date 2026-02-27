@@ -68,7 +68,7 @@ class UnityBridgeCallback : BrowserCallback {
     /**
      * JavaScript posted a message from web content.
      *
-     * Message is already JSON-formatted "{type, data}".
+     * Message is the raw string posted from web content.
      *
      * Sends to C# method: OnPostMessage
      */
