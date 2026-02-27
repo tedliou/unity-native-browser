@@ -1,12 +1,16 @@
 using System;
 using UnityEngine;
+using TedLiou.NativeBrowser.Internal;
 
 namespace TedLiou.NativeBrowser
 {
     public static class NativeBrowser
     {
-        private const string BridgeClassName = "com.tedliou.android.browser.BrowserManager";
-        private const string UnityPlayerClassName = "com.unity3d.player.UnityPlayer";
+        #if UNITY_ANDROID && !UNITY_EDITOR
+        private static readonly IPlatformBridge bridge = new AndroidBridge();
+#else
+        private static readonly IPlatformBridge bridge = new EditorBridge();
+#endif
 
         // Events fired when Android native callbacks are received
         // Subscribe to these events to handle browser lifecycle and interactions
@@ -55,173 +59,47 @@ namespace TedLiou.NativeBrowser
             var receiver = NativeBrowserCallbackReceiver.Instance;
             receiver.gameObject.SetActive(true);
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass unityPlayer = new AndroidJavaClass(UnityPlayerClassName))
-                using (AndroidJavaObject activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity"))
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("initialize", activity);
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: Initialize failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("Initialize");
-#endif
+            bridge.Initialize();
         }
 
         public static void Open(BrowserType type, BrowserConfig config)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
             if (config == null)
             {
                 Debug.LogWarning("NativeBrowser: Open called with null config");
                 return;
             }
-            try
-            {
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("open", ToAndroidType(type), config.ToJson());
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: Open failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("Open");
-#endif
+            bridge.Open(type.ToString(), config.ToJson());
         }
 
         public static void Close()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("close");
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: Close failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("Close");
-#endif
+            bridge.Close();
         }
 
         public static void Refresh()
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            try
-            {
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("refresh");
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: Refresh failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("Refresh");
-#endif
+            bridge.Refresh();
         }
 
         public static void ExecuteJavaScript(string script, string requestId = null)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (string.IsNullOrEmpty(script))
-            {
-                Debug.LogWarning("NativeBrowser: ExecuteJavaScript called with empty script");
-                return;
-            }
-            try
-            {
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("executeJavaScript", script, requestId);
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: ExecuteJavaScript failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("ExecuteJavaScript");
-#endif
+            bridge.ExecuteJavaScript(script, requestId);
         }
 
         public static void InjectJavaScript(string script)
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            if (string.IsNullOrEmpty(script))
-            {
-                Debug.LogWarning("NativeBrowser: InjectJavaScript called with empty script");
-                return;
-            }
-            try
-            {
-                using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                {
-                    bridgeClass.CallStatic("injectJavaScript", script);
-                }
-            }
-            catch (Exception exception)
-            {
-                Debug.LogWarning($"NativeBrowser: InjectJavaScript failed: {exception.Message}");
-            }
-#else
-            LogEditorOnly("InjectJavaScript");
-#endif
+            bridge.InjectJavaScript(script);
         }
 
         public static bool IsOpen
         {
             get
             {
-#if UNITY_ANDROID && !UNITY_EDITOR
-                try
-                {
-                    using (AndroidJavaClass bridgeClass = new AndroidJavaClass(BridgeClassName))
-                    {
-                        return bridgeClass.CallStatic<bool>("isOpen");
-                    }
-                }
-                catch (Exception exception)
-                {
-                    Debug.LogWarning($"NativeBrowser: IsOpen failed: {exception.Message}");
-                    return false;
-                }
-#else
-                LogEditorOnly("IsOpen");
-                return false;
-#endif
+                return bridge.IsOpen();
             }
         }
 
-        private static string ToAndroidType(BrowserType type)
-        {
-            switch (type)
-            {
-                case BrowserType.WebView:
-                    return "WEBVIEW";
-                case BrowserType.CustomTab:
-                    return "CUSTOM_TAB";
-                case BrowserType.SystemBrowser:
-                    return "SYSTEM_BROWSER";
-                default:
-                    return "WEBVIEW";
-            }
-        }
 
         internal static string GetAlignmentString(Alignment alignment)
         {
@@ -250,10 +128,6 @@ namespace TedLiou.NativeBrowser
             }
         }
 
-        private static void LogEditorOnly(string methodName)
-        {
-            Debug.LogWarning($"NativeBrowser: {methodName} is Android-only and was called in editor or non-Android platform");
-        }
 
         // Internal raise helpers — allow NativeBrowserCallbackReceiver (same assembly) to fire events
         internal static void RaiseOnPageStarted(string url)   => OnPageStarted?.Invoke(url);
