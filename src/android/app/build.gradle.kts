@@ -31,6 +31,14 @@ android {
     kotlin {
         jvmToolchain(11)
     }
+    packaging {
+        resources {
+            excludes += setOf(
+                "META-INF/LICENSE.md",
+                "META-INF/LICENSE-notice.md"
+            )
+        }
+    }
 }
 
 jacoco {
