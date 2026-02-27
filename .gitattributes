@@ -1,0 +1,47 @@
+# Force LF line endings for maximum cross-platform compatibility
+* text=auto eol=lf
+
+# Explicitly mark text files
+*.cs text eol=lf
+*.kt text eol=lf
+*.kts text eol=lf
+*.java text eol=lf
+*.xml text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+*.gradle text eol=lf
+*.properties text eol=lf
+*.pro text eol=lf
+*.asmdef text eol=lf
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+*.toml text eol=lf
+*.cfg text eol=lf
+*.bat text eol=lf
+
+# Binary files — do not modify
+*.aar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.apk binary
+*.aab binary
+*.jar binary
+*.so binary
+*.dll binary
+*.exe binary
+*.unity binary
+*.prefab binary
+*.asset binary
+*.meta text eol=lf
