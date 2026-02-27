@@ -55,7 +55,7 @@ Output: `app/build/outputs/aar/app-release.aar`
 .
 ├── src/
 │   ├── android/          # Android Gradle project -> builds .aar
-│   └── unity/            # Unity 6000.3.10f1 project (URP)
+│   └── unity/            # Unity 6 project (URP)
 ├── tools/                # Automation scripts (build, test, deploy, CI)
 ├── docs/                 # Developer documentation
 └── README.md             # Project overview
