@@ -1,12 +1,13 @@
 plugins {
     alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.android)
     jacoco
 }
 
 android {
     namespace = "com.tedliou.android.browser"
     compileSdk = 36
-    buildToolsVersion = "36.1.0"
+    buildToolsVersion = "36.0.0"
 
     defaultConfig {
         minSdk = 28
@@ -98,7 +99,6 @@ tasks.register<Task>("jacocoTestCoverageVerification") {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
-    implementation(libs.material)
     implementation(libs.androidx.browser)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.webkit)
@@ -110,4 +110,15 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.mockk.android)
+}
+
+// Task to export all runtime dependencies for Unity plugin integration.
+// Unity does not resolve Maven dependencies from .aar files, so all runtime
+// jars/aars must be placed in Assets/Plugins/Android/ manually.
+tasks.register<Copy>("exportDependencies") {
+    group = "build"
+    description = "Copy runtime dependencies to build/deps/ for Unity integration"
+
+    from(configurations.named("releaseRuntimeClasspath").get().resolve())
+    into(layout.buildDirectory.dir("deps"))
 }
