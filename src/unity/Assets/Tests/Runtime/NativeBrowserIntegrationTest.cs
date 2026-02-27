@@ -252,9 +252,8 @@ namespace TedLiou.NativeBrowser.Tests
         public void BrowserConfig_Serialization_ProducesValidJson()
         {
             // Arrange
-            var config = new BrowserConfig
+            var config = new BrowserConfig("https://test.example.com")
             {
-                url = "https://test.example.com",
                 width = 0.75f,
                 height = 0.85f,
                 alignment = Alignment.LEFT,

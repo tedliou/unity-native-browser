@@ -194,11 +194,11 @@ namespace TedLiou.NativeBrowser.Tests
         public void BrowserEventClasses_HaveExpectedProperties()
         {
             // PageStartedEvent should have 'url' property
-            PropertyInfo urlProp1 = typeof(PageStartedEvent).GetField("url");
+            FieldInfo urlProp1 = typeof(PageStartedEvent).GetField("url");
             Assert.IsNotNull(urlProp1);
             
             // PageFinishedEvent should have 'url' property
-            PropertyInfo urlProp2 = typeof(PageFinishedEvent).GetField("url");
+            FieldInfo urlProp2 = typeof(PageFinishedEvent).GetField("url");
             Assert.IsNotNull(urlProp2);
             
             // BrowserErrorEvent should have type, message, url, requestId
