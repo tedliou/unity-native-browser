@@ -76,7 +76,32 @@ Reports: `src/android/app/build/reports/jacoco/jacocoTestReport/html/index.html`
 
 ## CI/CD
 
-GitHub Actions workflow at [`.github/workflows/`](../.github/workflows/).
+GitHub Actions workflows at [`.github/workflows/`](../.github/workflows/):
+
+| Workflow | File | Jobs |
+|---------|------|------|
+| Android CI | `android.yml` | `build` (assembleRelease), `test` (unit tests), `coverage` (JaCoCo ≥85%) |
+| Android Lint | `lint.yml` | `lint` (Android Lint) |
+
+Triggers: push to `master`, pull requests to `master`.
+
+### Monitor CI from Local
+
+```bash
+# List recent workflow runs
+gh run list --repo tedliou/unity-native-browser --limit 5
+
+# View specific run details
+gh run view <run-id> --repo tedliou/unity-native-browser
+
+# View failure logs
+gh run view <run-id> --repo tedliou/unity-native-browser --log-failed
+
+# Watch a run in real-time
+gh run watch <run-id> --repo tedliou/unity-native-browser
+```
+
+Requires: [GitHub CLI](https://cli.github.com/) (`gh`) authenticated via `gh auth login`.
 
 ## Known Build Issues
 
