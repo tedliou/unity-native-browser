@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-02-28
+
+### Added
+
+- `NativeBrowser.SendPostMessage(string message)` — send arbitrary string messages from Unity to web content via `window.postMessage`
+- Direct `window.NativeBrowserBridge.postMessage(message)` call path for web → Unity messaging
+
+### Changed
+
+- PostMessage now accepts any non-empty string (previously required JSON with a `type` field)
+- Bridge script uses smart detection: strings pass through as-is, objects are JSON-serialized
+
+### Breaking Changes
+
+- Web → Unity messages are no longer guaranteed to be JSON — subscribers to `OnPostMessage` that relied on `JsonUtility.FromJson` must add their own format validation
+
 ## [1.0.3] - 2026-02-28
 
 ### Fixed
