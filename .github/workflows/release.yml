@@ -1,0 +1,147 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-aar:
+    name: Build Android .aar
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/android
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build release AAR
+        run: ./gradlew assembleRelease
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-browser-aar
+          path: src/android/app/build/outputs/aar/app-release.aar
+          if-no-files-found: error
+
+  release:
+    name: Create Release
+    needs: build-aar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Verify package.json version matches tag
+        run: |
+          PKG_VERSION=$(grep '"version"' src/unity/Assets/Plugins/NativeBrowser/package.json | head -1 | cut -d'"' -f4)
+          TAG_VERSION="${{ steps.version.outputs.VERSION }}"
+          if [ "$PKG_VERSION" != "$TAG_VERSION" ]; then
+            echo "::error::package.json version ($PKG_VERSION) does not match tag (v$TAG_VERSION)"
+            exit 1
+          fi
+
+      - name: Download AAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-browser-aar
+          path: build/
+
+      - name: Copy AAR into UPM package
+        run: |
+          mkdir -p src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android
+          cp build/app-release.aar \
+             src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android/NativeBrowser.aar
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pack UPM .tgz
+        working-directory: src/unity/Assets/Plugins/NativeBrowser
+        run: npm pack
+
+      - name: Collect artifacts
+        id: artifacts
+        run: |
+          mkdir -p dist
+          cp build/app-release.aar dist/NativeBrowser.aar
+          cp src/unity/Assets/Plugins/NativeBrowser/com.tedliou.nativebrowser-*.tgz dist/
+          echo "TGZ_NAME=$(basename dist/com.tedliou.nativebrowser-*.tgz)" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/NativeBrowser.aar
+            dist/${{ steps.artifacts.outputs.TGZ_NAME }}
+
+  publish-upm:
+    name: Publish UPM branch
+    needs: [build-aar, release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+
+      - name: Download AAR artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: native-browser-aar
+          path: build/
+
+      - name: Copy AAR into UPM package
+        run: |
+          mkdir -p src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android
+          cp build/app-release.aar \
+             src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android/NativeBrowser.aar
+          git add -f src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android/NativeBrowser.aar
+
+      - name: Split UPM branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Commit the freshly-built .aar so subtree split includes it
+          git commit -m "chore: update .aar for v${{ steps.version.outputs.VERSION }}" --allow-empty
+
+          # Split package directory into upm branch
+          git branch -D upm &> /dev/null || true
+          git subtree split -P "src/unity/Assets/Plugins/NativeBrowser" -b upm
+
+          # Force push upm branch
+          git push -f origin upm
+
+      - name: Tag UPM branch
+        run: |
+          git checkout upm
+          git tag -f "v${{ steps.version.outputs.VERSION }}"
+          git push -f origin "v${{ steps.version.outputs.VERSION }}"

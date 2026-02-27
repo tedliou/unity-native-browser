@@ -65,3 +65,6 @@ NUL
 
 # Agent artifacts (plan execution logs)
 .sisyphus/
+
+# Built .aar inside UPM package (CI injects via git add -f before subtree split)
+src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android/NativeBrowser.aar

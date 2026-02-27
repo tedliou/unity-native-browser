@@ -61,6 +61,41 @@ Automation scripts in [`tools/`](../tools/):
 - `copy-aar.sh` — Copy .aar to Unity plugins
 - `deploy.sh` — Build APK + adb install
 - `clean.sh` — Clean build artifacts
+- `create-release.sh` — Build all release artifacts (`.aar` + `.tgz`), optionally publish GitHub Release
+
+## Release Pipeline
+
+### Automated (CI)
+
+Push a version tag to trigger the full release:
+
+```bash
+git tag v1.0.0 && git push origin v1.0.0
+```
+
+This triggers `.github/workflows/release.yml` which:
+1. Builds `.aar` from source
+2. Packs UPM `.tgz` tarball
+3. Creates GitHub Release with `.aar` + `.tgz` attached
+4. Splits UPM package to the `upm` branch via `git subtree split`
+5. Tags the `upm` branch with the version
+
+### Manual (Local)
+
+```bash
+./tools/create-release.sh            # Build artifacts only
+./tools/create-release.sh --publish  # Build + create GitHub Release
+./tools/create-release.sh --draft    # Build + create draft release
+```
+
+### Version Management
+
+Single source of truth: `src/unity/Assets/Plugins/NativeBrowser/package.json`
+
+When releasing:
+1. Update `version` in `package.json`
+2. Update `CHANGELOG.md`
+3. Commit, tag (`v{version}`), push
 
 ## JaCoCo Coverage
 
@@ -82,7 +117,9 @@ GitHub Actions workflows at [`.github/workflows/`](../.github/workflows/):
 |---------|------|------|
 | Android CI | `android.yml` | `build` (assembleRelease), `test` (unit tests), `coverage` (JaCoCo ≥85%) |
 | Android Lint | `lint.yml` | `lint` (Android Lint) |
+| Release | `release.yml` | `build-aar`, `release` (GitHub Release), `publish-upm` (subtree split) |
 
+Release workflow triggers: push tag `v*`.
 Triggers: push to `master`, pull requests to `master`.
 
 ### Monitor CI from Local

@@ -12,16 +12,64 @@ Android native browser plugin for Unity — WebView, Custom Tabs, and System Bro
 ## Requirements
 | Component | Version |
 |-----------|---------|
-| Unity | 6000.3.10f1+ (Unity 6) |
+| Unity | 6000.0.0f1+ (Unity 6) |
 | Android minSdk | 28 (Android 9.0) |
 | Android compileSdk | 36 |
-| Gradle | 8.7+ |
+
+## Installation
+
+### UPM via Git URL (Recommended)
+
+Add to your `Packages/manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#upm"
+  }
+}
+```
+
+To install a specific version:
+
+```json
+{
+  "dependencies": {
+    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#v1.0.1"
+  }
+}
+```
+
+Or via Unity Package Manager UI:
+1. **Window > Package Manager > + > Add package from git URL...**
+2. Enter: `https://github.com/tedliou/unity-native-browser.git#upm`
+
+### UPM via Tarball
+
+1. Download `com.tedliou.nativebrowser-<version>.tgz` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. In Unity: **Window > Package Manager > + > Add package from tarball...**
+
+### .unitypackage
+
+1. Download `NativeBrowser-<version>.unitypackage` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. In Unity: **Assets > Import Package > Custom Package...**
+
+### Manual .aar
+
+1. Download `NativeBrowser.aar` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. Place in `Assets/Plugins/Android/`
+3. Copy the C# scripts from `src/unity/Assets/Plugins/NativeBrowser/Runtime/` into your project
+4. Add the required Gradle dependencies (see [docs/en/README.md](docs/en/README.md))
 
 ## Quick Start
-1. Import `NativeBrowser.aar` into `Assets/Plugins/Android/`
-2. Initialize in your script: `NativeBrowser.Initialize();`
-3. Open a URL:
+
 ```csharp
+using TedLiou.NativeBrowser;
+
+// Initialize once
+NativeBrowser.Initialize();
+
+// Open a WebView
 var config = new BrowserConfig("https://example.com")
 {
     width = 0.9f,
@@ -47,8 +95,11 @@ cd src/android
 ```
 Output: `app/build/outputs/aar/app-release.aar`
 
-### Build APK (Unity headless)
-(Reference tools/ directory for automation scripts)
+### Create Release Artifacts
+```bash
+./tools/create-release.sh            # Build .aar + pack .tgz
+./tools/create-release.sh --publish  # Also create GitHub Release
+```
 
 ## Project Structure
 ```
@@ -56,7 +107,8 @@ Output: `app/build/outputs/aar/app-release.aar`
 ├── src/
 │   ├── android/          # Android Gradle project -> builds .aar
 │   └── unity/            # Unity 6 project (URP)
-├── tools/                # Automation scripts (build, test, deploy, CI)
+│       └── Assets/Plugins/NativeBrowser/  # UPM package root
+├── tools/                # Automation scripts (build, test, deploy, release)
 ├── docs/                 # Developer documentation
 └── README.md             # Project overview
 ```
@@ -64,3 +116,7 @@ Output: `app/build/outputs/aar/app-release.aar`
 ## Testing
 - Android unit tests: `./gradlew test` (from src/android/)
 - Android instrumented tests: `./gradlew connectedAndroidTest`
+
+## License
+
+[MIT](src/unity/Assets/Plugins/NativeBrowser/LICENSE)

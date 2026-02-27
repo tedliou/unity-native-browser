@@ -16,10 +16,49 @@ NativeBrowser Unity 插件的開發者文檔。此插件提供原生的 Android 
 ## 快速入門
 
 ### 安裝
-1. 建置 Android 函式庫專案以生成 `.aar` 檔案。
-2. 將 `.aar` 檔案複製到 Unity 專案中的 `Assets/Plugins/Android/` 目錄。
-3. 確保 `NativeBrowser` C# 腳本已放置在 `Assets/` 目錄下。
 
+#### UPM Git URL 安裝（推薦）
+
+將以下內容加入您的 `Packages/manifest.json`：
+
+```json
+{
+  "dependencies": {
+    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#upm"
+  }
+}
+```
+
+安裝特定版本，將 `#upm` 替換為 `#v1.0.1`。
+
+#### UPM Tarball 安裝
+
+1. 從 [Releases](https://github.com/tedliou/unity-native-browser/releases) 下載 `com.tedliou.nativebrowser-<version>.tgz`
+2. 在 Unity 中：**Window > Package Manager > + > Add package from tarball...**
+
+#### .unitypackage 安裝
+
+1. 從 [Releases](https://github.com/tedliou/unity-native-browser/releases) 下載 `NativeBrowser-<version>.unitypackage`
+2. 在 Unity 中：**Assets > Import Package > Custom Package...**
+
+#### 手動 .aar 安裝
+
+1. 從 [Releases](https://github.com/tedliou/unity-native-browser/releases) 下載 `NativeBrowser.aar`
+2. 放入 `Assets/Plugins/Android/`
+3. 將以下 Gradle 依賴加入您的 `mainTemplate.gradle` 或自訂 Gradle 模板：
+
+```gradle
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.20'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+    implementation 'androidx.browser:browser:1.9.0'
+    implementation 'androidx.webkit:webkit:1.13.0'
+    implementation 'androidx.activity:activity-ktx:1.10.0'
+}
+```
+
+> **注意**：透過 UPM 安裝時，這些依賴會由 `NativeBrowserDeps.androidlib` 自動處理。
 ### 回調接收器
 建立一個繼承自 `NativeBrowserCallbackReceiver` 的腳本來處理瀏覽器事件。
 

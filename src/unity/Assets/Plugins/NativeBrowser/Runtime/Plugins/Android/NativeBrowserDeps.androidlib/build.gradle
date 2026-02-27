@@ -1,0 +1,22 @@
+// NativeBrowser runtime dependencies.
+// Unity does not resolve Maven dependencies from .aar files, so they must be
+// declared here.  Unity merges this build.gradle into the final Gradle project
+// automatically because the parent folder ends with ".androidlib".
+
+dependencies {
+    // Kotlin runtime (required — .aar is compiled with Kotlin 2.1.20)
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.20'
+
+    // Coroutines (used for async browser operations)
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+
+    // AndroidX Browser (Chrome Custom Tabs support)
+    implementation 'androidx.browser:browser:1.9.0'
+
+    // AndroidX WebKit (enhanced WebView features)
+    implementation 'androidx.webkit:webkit:1.13.0'
+
+    // AndroidX Activity (result APIs used by BrowserManager)
+    implementation 'androidx.activity:activity-ktx:1.10.0'
+}

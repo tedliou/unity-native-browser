@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stub manifest for NativeBrowserDeps.androidlib.
+     This directory exists solely to declare Gradle dependencies that the
+     NativeBrowser .aar requires at runtime.  Unity treats any folder ending
+     in ".androidlib" as a local Android library module and merges its
+     build.gradle into the final Gradle project. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.tedliou.nativebrowser.deps">
+    <!-- No components — dependency declarations only -->
+</manifest>

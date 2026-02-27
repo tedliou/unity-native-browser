@@ -16,10 +16,49 @@ Developer documentation for the NativeBrowser Unity plugin. This plugin provides
 ## Quick Start
 
 ### Installation
-1. Build the Android library project to generate the `.aar` file.
-2. Copy the `.aar` file into your Unity project at `Assets/Plugins/Android/`.
-3. Ensure the `NativeBrowser` C# scripts are in your `Assets/` directory.
 
+#### UPM via Git URL (Recommended)
+
+Add to your `Packages/manifest.json`:
+
+```json
+{
+  "dependencies": {
+    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#upm"
+  }
+}
+```
+
+To install a specific version, replace `#upm` with `#v1.0.1`.
+
+#### UPM via Tarball
+
+1. Download `com.tedliou.nativebrowser-<version>.tgz` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. In Unity: **Window > Package Manager > + > Add package from tarball...**
+
+#### .unitypackage
+
+1. Download `NativeBrowser-<version>.unitypackage` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. In Unity: **Assets > Import Package > Custom Package...**
+
+#### Manual .aar
+
+1. Download `NativeBrowser.aar` from [Releases](https://github.com/tedliou/unity-native-browser/releases)
+2. Place in `Assets/Plugins/Android/`
+3. Add the following Gradle dependencies to your `mainTemplate.gradle` or Custom Gradle Template:
+
+```gradle
+dependencies {
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.20'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+    implementation 'androidx.browser:browser:1.9.0'
+    implementation 'androidx.webkit:webkit:1.13.0'
+    implementation 'androidx.activity:activity-ktx:1.10.0'
+}
+```
+
+> **Note**: UPM installation includes these dependencies automatically via `NativeBrowserDeps.androidlib`.
 ### Callback Receiver
 Create a script that inherits from `NativeBrowserCallbackReceiver` to handle browser events.
 
