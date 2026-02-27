@@ -36,3 +36,4 @@ google-services.json
 # Java
 *.class
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
