@@ -2,53 +2,56 @@
 
 ## OVERVIEW
 
-Unity 6000.3.10f1 (Unity 6) with URP 17.3.0. Scaffold only — no custom scripts or plugin code yet. Consumes Android .aar via `Assets/Plugins/Android/`.
+Unity 6000.3.10f1 (Unity 6) with URP 17.3.0. Fully implemented plugin with a robust C# bridge to the Android native .aar.
 
 ## STRUCTURE
 
 ```
 src/unity/
 ├── Assets/
-│   ├── Scenes/               # Default scene only
-│   └── Settings/             # URP renderer settings
+│   ├── Plugins/
+│   │   ├── Android/
+│   │   │   ├── NativeBrowser.aar       # The native library
+│   │   │   └── mainTemplate.gradle     # Custom Gradle template with dependencies
+│   │   └── NativeBrowser/
+│   │       ├── Runtime/                # C# API and JNI bridge
+│   │       ├── Editor/                 # Build scripts and custom inspectors
+│   │       └── TedLiou.NativeBrowser.asmdef
+│   ├── Scenes/
+│   │   └── Demo.unity                  # Demonstration scene
+│   ├── Tests/
+│   │   ├── Editor/                     # Edit Mode tests
+│   │   └── Runtime/                    # Play Mode tests
+│   └── TedLiou.Demo.asmdef
 ├── Packages/
-│   └── manifest.json         # Package dependencies
-├── ProjectSettings/          # Unity project config
-└── Library/                  # ⚠️ HUGE cache — always exclude from searches
+│   └── manifest.json
+└── ProjectSettings/
 ```
 
-## WHERE TO LOOK
+## ARCHITECTURE
 
-| Task | Location |
-|------|----------|
-| C# scripts | `Assets/` — none yet, create feature scripts here |
-| Plugin .aar | `Assets/Plugins/Android/` — standard Unity convention for Android plugins |
-| Package manifest | `Packages/manifest.json` |
-| Test framework | Already included: `com.unity.test-framework` 1.6.0 |
-| Input system | Already included: `com.unity.inputsystem` 1.18.0 |
+- **Namespace**: `TedLiou.NativeBrowser` (Public API) and `TedLiou.NativeBrowser.Internal` (JSON models and low-level bridge).
+- **Callback Pattern**: `NativeBrowserCallbackReceiver` is a singleton that auto-creates a GameObject named "NativeBrowserCallback". It uses `DontDestroyOnLoad` to persist across scenes and receives `UnitySendMessage` from Android.
+- **Asmdef**: Uses Assembly Definitions to isolate Runtime, Editor, and Demo code, improving compilation times and dependency management.
 
-## KEY PACKAGES (non-default)
+## ANDROID INTEGRATION
 
-| Package | Version | Relevance |
-|---------|---------|-----------|
-| com.unity.test-framework | 1.6.0 | Required for Edit/Play Mode tests |
-| com.unity.inputsystem | 1.18.0 | New Input System active |
+- **.aar Plugin**: The native code is compiled into `NativeBrowser.aar` and placed in `Assets/Plugins/Android/`.
+- **mainTemplate.gradle**: Unity's custom Gradle template is used to include necessary Maven dependencies that are not bundled in the .aar:
+  - `kotlin-stdlib`
+  - `kotlinx-coroutines-android`
+  - `androidx.browser:browser`
+  - `androidx.webkit:webkit`
+  - `androidx.activity:activity-ktx`
 
 ## CONVENTIONS
 
-- Unity C# scripts go in `Assets/` subdirectories
-- Android .aar plugin: place in `Assets/Plugins/Android/`
-- Tests: `Assets/Tests/Editor/` (Edit Mode) and `Assets/Tests/Runtime/` (Play Mode)
-- AndroidJNI module already included — used for C# ↔ Java bridge via `AndroidJavaClass`/`AndroidJavaObject`
+- **JNI Bridge**: Use `AndroidJavaClass` and `AndroidJavaObject` to communicate with `com.tedliou.android.browser.BrowserManager`.
+- **Async/Callbacks**: Use Action delegates in C# to handle results from the native side.
 
 ## NOTES
 
-- `Library/` contains 20k+ cached files. NEVER search inside it.
-- Project uses URP — irrelevant to browser plugin but affects rendering pipeline.
-- `com.unity.modules.androidjni` already in manifest — JNI bridge available via `AndroidJavaClass`/`AndroidJavaObject`.
-- No `.asmdef` files yet — add Assembly Definitions when creating test targets.
-- Place .aar at `Assets/Plugins/Android/<name>.aar` — Unity auto-imports.
-- Tests go in `Assets/Tests/Editor/` (Edit Mode) and `Assets/Tests/Runtime/` (Play Mode).
-- C# bridge scripts: call Android with `AndroidJavaObject`, receive callbacks via `UnitySendMessage`.
-- `com.unity.test-framework` 1.6.0 and `com.unity.inputsystem` 1.18.0 already installed.
-- `src/unity/Library/` should be gitignored — currently tracked (clean up).
+- **Library/**: Contains 20k+ cached files. **NEVER** search inside it.
+- **NativeBrowserCallback**: This GameObject name is hardcoded in the Android bridge; do not rename it.
+- **Test Runner**: Use Unity Test Framework for both Edit Mode and Play Mode tests.
+- **ProGuard**: If adding new classes called via JNI, update the ProGuard rules in the Android project.

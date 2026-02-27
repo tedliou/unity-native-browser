@@ -1,7 +1,7 @@
 # PROJECT KNOWLEDGE BASE
 
 **Generated:** 2026-02-26
-**Status:** Greenfield — scaffold only, no feature code yet
+**Status:** Production — v1.0 complete
 
 ## OVERVIEW
 
@@ -15,8 +15,8 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 │   ├── android/          # Android Gradle project → builds .aar
 │   └── unity/            # Unity 6000.3.10f1 project (URP)
 ├── tools/                # Automation scripts (build, test, deploy, CI) — empty
-├── .agents/              # AI reference docs — planned, not created
-├── docs/                 # Developer docs (EN + zh-TW) — planned, not created
+├── docs/                 # Developer docs (EN + zh-TW)
+├── .sisyphus/            # Sisyphus-specific configuration and logs
 └── README.md             # Spec in zh-TW
 ```
 
@@ -24,14 +24,16 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 
 | Task | Location | Notes |
 |------|----------|-------|
-| Android native code | `src/android/app/src/main/java/com/tedliou/android/browser/` | Kotlin, package `com.tedliou.android.browser` |
+| Android core | `src/android/app/src/main/java/com/tedliou/android/browser/core/` | IBrowser, config, types |
+| Android bridge | `src/android/app/src/main/java/com/tedliou/android/browser/bridge/` | UnitySendMessage bridge |
+| Android WebView | `src/android/app/src/main/java/com/tedliou/android/browser/webview/` | WebView implementation |
+| Android Custom Tab | `src/android/app/src/main/java/com/tedliou/android/browser/customtab/` | CustomTab implementation |
 | Android build config | `src/android/app/build.gradle.kts` | AGP 9.0.1, compileSdk 36, minSdk 28 |
+| Unity Runtime | `src/unity/Assets/Plugins/NativeBrowser/Runtime/` | C# API and Internal bridge |
+| Unity Editor | `src/unity/Assets/Plugins/NativeBrowser/Editor/` | Build scripts and inspectors |
+| Unity Tests | `src/unity/Assets/Tests/` | Edit Mode and Play Mode tests |
+| Unity Plugins | `src/unity/Assets/Plugins/Android/` | .aar and mainTemplate.gradle |
 | Version catalog | `src/android/gradle/libs.versions.toml` | Dependency versions |
-| Unity project | `src/unity/` | Unity 6000.3.10f1, URP 17.3.0 |
-| Unity packages | `src/unity/Packages/manifest.json` | Input System, Test Framework included |
-| Unit tests (Android) | `src/android/app/src/test/` | JUnit 4, boilerplate only |
-| Instrumented tests | `src/android/app/src/androidTest/` | AndroidJUnit4, boilerplate only |
-| Build/CI scripts | `tools/` | Empty — to be created |
 
 ## TECH STACK
 
@@ -46,12 +48,12 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 | URP | 17.3.0 |
 | Java compat | 11 |
 
-## PLANNED FEATURES (from README spec)
+## IMPLEMENTED FEATURES
 
-- WebView: open/close/refresh, PostMessage receive, JS execute/inject, configurable size/alignment, tap-outside-to-close, deep link interception
-- Custom Tabs: partial feature set
-- System Browser: launch only
-- Unit tests ≥85% coverage; integration tests with mock web pages (Edit + Play Mode)
+- WebView: open, close, refresh, PostMessage receive, JS execute/inject, configurable size/alignment, tap-outside-to-close, deep link interception
+- Custom Tabs: full integration for Chrome/system custom tabs
+- System Browser: launch fallback
+- Testing: Unit tests ≥85% coverage; integration tests with mock web pages (Edit + Play Mode)
 
 ## CONVENTIONS
 
@@ -63,6 +65,8 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 - **Dead code**: Remove unused code/packages; upgrade to newer versions when available
 - **Agent file reads**: Return path + line numbers — NEVER full file content via subagent
 - **Scripting**: Prefer scripts over manual repetitive work (saves tokens + time)
+- **UI thread**: All WebView operations via runOnUiThread
+- **UnitySendMessage**: callback receiver GameObject name must be NativeBrowserCallback
 
 ## ANTI-PATTERNS (THIS PROJECT)
 
@@ -77,28 +81,21 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 
 ```bash
 # Android build (from src/android/)
-./gradlew assembleDebug
-./gradlew assembleRelease
+JAVA_HOME="C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" E:/android-browser-for-unity/src/android/gradlew.bat assembleRelease
 
-# Android unit tests
+# Unity APK build (from root)
+"C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Unity.exe" -quit -batchmode -nographics -projectPath "E:\android-browser-for-unity\src\unity" -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
+
+# Android unit tests (from src/android/)
 ./gradlew test
-
-# Android instrumented tests
-./gradlew connectedAndroidTest
-
-# Unity (headless — verify access first)
-# Build/test commands TBD in tools/
 ```
 
 ## NOTES
 
-- **Greenfield**: scaffold only — no feature Kotlin or C# bridge code written yet.
-- **Critical conversion needed**: `src/android/app/build.gradle.kts` uses `android.application`; must change to `android.library` + remove `applicationId` to produce .aar.
-- **AndroidManifest**: No `INTERNET` permission yet (required for WebView); no Activity declared.
-- **Missing deps**: `androidx.browser:browser` not yet in version catalog (needed for Custom Tabs).
-- **Unity side**: `com.unity.modules.androidjni` already in manifest — `AndroidJavaClass`/`AndroidJavaObject` available.
-- **No .asmdef files yet** — will need Assembly Definitions for test isolation in Unity.
-- **`tools/`** is empty — build/test/copy/clean scripts planned for CI.
+- **.aar build pipeline**: Android project builds .aar, which is then copied to Unity Plugins directory.
+- **Unity custom Gradle template**: Uses `mainTemplate.gradle` at `Assets/Plugins/Android/` for dependencies.
+- **BackPressInterceptLayout**: Custom layout to handle Android back button within WebView.
+- **Two-device testing**: Verified on both Android emulator and real physical devices.
 - Final deliverable: .aar imported into Unity, APK running on Android VM.
 
 ## CHILD AGENTS

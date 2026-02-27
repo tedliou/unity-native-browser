@@ -2,21 +2,29 @@
 
 ## OVERVIEW
 
-Kotlin Android project. Scaffold only (AGP 9.0.1, Gradle 9.3.1). Builds to .aar for Unity. Package: `com.tedliou.android.browser`.
+Kotlin Android library project. Fully implemented producing a production-ready .aar for Unity. Uses AGP 9.0.1 and Gradle 9.3.1. Package: `com.tedliou.android.browser`.
 
 ## STRUCTURE
 
 ```
 src/android/
 ├── app/
-│   ├── build.gradle.kts          # Module config — currently android.application, needs → android.library for .aar
+│   ├── build.gradle.kts          # Module config — android.library
+│   ├── consumer-proguard-rules.pro # Rules for the consuming Unity project
+│   ├── proguard-rules.pro        # Rules for the library itself
 │   └── src/
 │       ├── main/
-│       │   ├── AndroidManifest.xml   # No Activity declared yet
-│       │   ├── java/.../browser/     # Empty — feature code goes here
-│       │   └── res/                  # Default resources only
-│       ├── test/.../browser/         # JUnit 4 boilerplate
-│       └── androidTest/.../browser/  # Instrumented test boilerplate
+│       │   ├── AndroidManifest.xml   # INTERNET permission, <queries> for Custom Tabs
+│       │   ├── java/com/tedliou/android/browser/
+│       │   │   ├── BrowserManager.kt # Singleton entry point
+│       │   │   ├── bridge/           # UnitySendMessage bridge
+│       │   │   ├── core/             # Interfaces and configuration
+│       │   │   ├── webview/          # WebView implementation
+│       │   │   ├── customtab/        # Custom Tabs implementation
+│       │   │   ├── system/           # System Browser launch
+│       │   │   └── util/             # Helpers and Logger
+│       │   └── res/                  # Layouts and assets
+│       └── test/                     # Unit tests (Junit 4)
 ├── build.gradle.kts              # Root — applies AGP plugin
 ├── settings.gradle.kts           # Single module ":app"
 ├── gradle.properties             # AndroidX enabled, official Kotlin style
@@ -25,50 +33,42 @@ src/android/
     └── libs.versions.toml        # Version catalog
 ```
 
-## CONVENTIONS
+## PACKAGE RESPONSIBILITIES
 
-- Package: `com.tedliou.android.browser`
-- Java compatibility: 11
-- AndroidX: required (`android.useAndroidX=true`)
-- R class: non-transitive (`android.nonTransitiveRClass=true`)
-- Kotlin style: official
-- ProGuard: configured but minify disabled for release
+- `core/` — `IBrowser`, `BrowserConfig`, `BrowserType`, `Alignment`, `BrowserCallback`, `BrowserException`
+- `bridge/` — `BrowserBridge` (UnitySendMessage), `UnityBridgeCallback`
+- `webview/` — `WebViewBrowser`, `WebViewLayoutManager`, `JsBridge`, `DeepLinkMatcher`, `BackPressInterceptLayout`
+- `customtab/` — `CustomTabBrowser`
+- `system/` — `SystemBrowser`
+- `util/` — `BrowserLogger`
 
-## WHERE TO LOOK
+## THREADING MODEL
 
-| Task | File |
-|------|------|
-| Add dependencies | `gradle/libs.versions.toml` + `app/build.gradle.kts` |
-| Add Android permissions | `app/src/main/AndroidManifest.xml` |
-| Feature code | `app/src/main/java/com/tedliou/android/browser/` |
-| Unit tests | `app/src/test/java/com/tedliou/android/browser/` |
-| Instrumented tests | `app/src/androidTest/java/com/tedliou/android/browser/` |
+**CRITICAL**: All WebView and UI-related operations MUST run on the Android UI thread. Use `activity.runOnUiThread { ... }` when calling these methods from Unity's worker threads.
 
-## CRITICAL: .aar Conversion
+## PROGUARD
 
-The app module is currently `com.android.application`. To produce .aar:
-1. Change plugin in `app/build.gradle.kts`: `android.application` → `android.library`
-2. Remove `applicationId` from defaultConfig
-3. Add `android.library` plugin to version catalog
-4. Optionally: create separate demo app module that depends on the library
+The `consumer-proguard-rules.pro` file ensures that public API classes and methods used by Unity via JNI are not obfuscated or removed. `proguard-rules.pro` mirrors these settings for the library build.
 
-## DEPENDENCIES (current)
+## BUILD OUTPUT
 
-| Library | Version | Purpose |
-|---------|---------|---------|
-| androidx.core:core-ktx | 1.17.0 | Kotlin extensions |
-| androidx.appcompat | 1.7.1 | Compat |
-| com.google.android.material | 1.13.0 | Material Design |
-| junit | 4.13.2 | Unit tests |
-| androidx.test.ext:junit | 1.3.0 | Android test runner |
-| androidx.test.espresso | 3.7.0 | UI testing |
+The build process produces a release .aar at:
+`app/build/outputs/aar/app-release.aar`
+
+## DEPENDENCIES
+
+| Library | Purpose |
+|---------|---------|
+| `androidx.core:core-ktx` | Kotlin extensions |
+| `androidx.browser:browser` | Custom Tabs support |
+| `androidx.webkit:webkit` | Advanced WebView features |
+| `androidx.activity:activity-ktx` | Activity context helpers |
+| `org.jetbrains.kotlinx:kotlinx-coroutines-android` | Threading and async operations |
+| `junit` | Unit tests |
 
 ## NOTES
 
-- WebView requires `INTERNET` permission — not yet in manifest.
-- Custom Tabs requires `androidx.browser:browser` — not yet in version catalog.
-- ProGuard: minify disabled; add `-keepclassmembers` for any WebView JS interface.
-- Build as .aar: change `android.application` → `android.library`, remove `applicationId`.
-- `android.library` plugin not yet in `libs.versions.toml` — add before conversion.
-- `local.properties` is auto-generated — never commit.
-- No feature Kotlin code exists yet; production code goes in `java/.../browser/`.
+- **AndroidManifest**: Contains `INTERNET` permission and `<queries>` element for package visibility (required for Custom Tabs on API 30+).
+- **ProGuard**: Ensure `-keep` rules are updated if new JS interfaces are added.
+- **Back Button**: Handled via `BackPressInterceptLayout` to allow closing WebView with system back button.
+- **Logger**: Uses `BrowserLogger` for unified logging with "NativeBrowser" tag.
