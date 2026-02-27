@@ -1,0 +1,19 @@
+{
+    "name": "TedLiou.NativeBrowser.Tests.Editor",
+    "rootNamespace": "TedLiou.NativeBrowser.Tests",
+    "references": [
+        "TedLiou.NativeBrowser"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "testAssemblies": true
+}
