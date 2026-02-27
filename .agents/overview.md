@@ -11,7 +11,7 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 ```
 .
 ├── src/android/          → Android Gradle project (Kotlin) → builds .aar
-├── src/unity/            → Unity 6000.3.10f1 project (C#, URP)
+├── src/unity/            → Unity 6 project (C#, URP)
 ├── tools/                → Shell scripts (build, test, deploy, clean, copy-aar)
 ├── docs/                 → Developer docs (EN + zh-TW)
 ├── .agents/              → AI knowledge base (this directory)
@@ -28,7 +28,6 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 | [build.md](build.md) | Build commands, environment, pipeline steps |
 | [troubleshooting.md](troubleshooting.md) | Known bugs, root causes, and fix locations |
 | [conventions.md](conventions.md) | Code style, anti-patterns, naming rules |
-| [guides/ssh-signing-setup.md](guides/ssh-signing-setup.md) | GitHub Verified commits via SSH signing |
 
 ## Tech Stack
 
@@ -39,7 +38,7 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 | Android compileSdk | 36 |
 | Android minSdk | 28 |
 | Kotlin code style | official |
-| Unity | 6000.3.10f1 |
+| Unity | 6 (6000.x) |
 | URP | 17.3.0 |
 | Java compat | 11 |
 

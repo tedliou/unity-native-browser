@@ -13,7 +13,6 @@
 | Build commands & pipeline | [.agents/build.md](.agents/build.md) |
 | Known bugs & fixes | [.agents/troubleshooting.md](.agents/troubleshooting.md) |
 | Code conventions | [.agents/conventions.md](.agents/conventions.md) |
-| SSH signing setup | [.agents/guides/ssh-signing-setup.md](.agents/guides/ssh-signing-setup.md) |
 
 ## Where to Look
 
@@ -36,13 +35,13 @@
 
 ```bash
 # Android .aar build
-JAVA_HOME="C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" E:/android-browser-for-unity/src/android/gradlew.bat assembleRelease
+JAVA_HOME="<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" src/android/gradlew assembleRelease
 
 # Android unit tests
-JAVA_HOME="C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" E:/android-browser-for-unity/src/android/gradlew.bat test
+JAVA_HOME="<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" src/android/gradlew test
 
 # Unity APK build (headless)
-"C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Unity.exe" -quit -batchmode -nographics -projectPath "E:\android-browser-for-unity\src\unity" -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
+"<UNITY_INSTALL>/Editor/Unity" -quit -batchmode -nographics -projectPath src/unity -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
 ```
 
 ## Anti-Patterns

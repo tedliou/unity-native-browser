@@ -2,8 +2,8 @@
 
 ## Project Info
 
-- **Unity**: 6000.3.10f1 (Unity 6) with URP 17.3.0
-- **Bundle ID**: `com.tedliou.android.browser`
+- **Unity**: Unity 6 (6000.x) with URP
+- **Bundle ID**: `com.tedliou.android.browser` (defined in Unity Player Settings)
 - **minSdk**: 28, **compileSdk**: 36
 
 ## Namespace Structure

@@ -2,20 +2,19 @@
 
 ## Environment Requirements
 
-| Tool | Path / Version |
-|------|---------------|
-| Unity | `C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Unity.exe` |
-| JDK (for Gradle) | Unity bundled: `C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK` |
-| Android SDK | `C:\Users\Ted\AppData\Local\Android\Sdk` |
+| Tool | Requirement |
+|------|-------------|
+| Unity | Unity 6 (6000.x) — set `UNITY_INSTALL` to your Unity editor root |
+| JDK (for Gradle) | Unity bundled: `<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK` |
+| Android SDK | Standard Android SDK (auto-detected via `local.properties`) |
 | Gradle | 9.3.1 (wrapper in `src/android/gradle/wrapper/`) |
 | AGP | 9.0.1 |
 
 ## Build .aar (Android Library)
 
 ```bash
-# From repository root (Windows)
-set JAVA_HOME=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK
-E:\android-browser-for-unity\src\android\gradlew.bat assembleRelease
+# From repository root
+JAVA_HOME="<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" src/android/gradlew assembleRelease
 ```
 
 **Output**: `src/android/app/build/outputs/aar/app-release.aar`
@@ -31,14 +30,13 @@ Or use: `tools/copy-aar.sh`
 ## Run Android Unit Tests
 
 ```bash
-set JAVA_HOME=C:/Program Files/Unity/Hub/Editor/6000.3.10f1/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK
-E:\android-browser-for-unity\src\android\gradlew.bat test
+JAVA_HOME="<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" src/android/gradlew test
 ```
 
 ## Build Unity APK (Headless)
 
 ```bash
-"C:\Program Files\Unity\Hub\Editor\6000.3.10f1\Editor\Unity.exe" -quit -batchmode -nographics -projectPath "E:\android-browser-for-unity\src\unity" -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
+"<UNITY_INSTALL>/Editor/Unity" -quit -batchmode -nographics -projectPath src/unity -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
 ```
 
 **Output**: `build/NativeBrowser.apk`
