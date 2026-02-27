@@ -1,2 +1,7 @@
 ﻿<Solution>
+  <Project Path="TedLiou.NativeBrowser.csproj" />
+  <Project Path="TedLiou.NativeBrowser.Tests.Runtime.csproj" />
+  <Project Path="TedLiou.NativeBrowser.Tests.Editor.csproj" />
+  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="TedLiou.Demo.csproj" />
 </Solution>
