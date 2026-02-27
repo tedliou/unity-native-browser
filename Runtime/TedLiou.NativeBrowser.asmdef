@@ -1,0 +1,14 @@
+{
+    "name": "TedLiou.NativeBrowser",
+    "rootNamespace": "TedLiou.NativeBrowser",
+    "references": [],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
