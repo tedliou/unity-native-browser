@@ -1,0 +1,81 @@
+apply plugin: 'com.android.library'
+apply from: '../shared/keepUnitySymbols.gradle'
+apply from: '../shared/common.gradle'
+**APPLY_PLUGINS**
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // NativeBrowser plugin runtime dependencies
+    // Kotlin runtime (required - .aar is compiled with Kotlin 2.1.20)
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.20'
+
+    // Coroutines (used by NativeBrowser for async operations)
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.10.1'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+
+    // AndroidX Browser (Custom Tabs support)
+    implementation 'androidx.browser:browser:1.9.0'
+
+    // AndroidX WebKit (enhanced WebView features)
+    implementation 'androidx.webkit:webkit:1.13.0'
+
+    // AndroidX Activity (result APIs used by BrowserManager)
+    implementation 'androidx.activity:activity-ktx:1.10.0'
+
+**DEPS**}
+
+android {
+    namespace "com.unity3d.player"
+    ndkPath "**NDKPATH**"
+    ndkVersion "**NDKVERSION**"
+    compileSdk **APIVERSION**
+    buildToolsVersion = "**BUILDTOOLS**"
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    defaultConfig {
+        consumerProguardFiles "proguard-unity.txt"**USER_PROGUARD**
+        versionName "**VERSIONNAME**"
+        minSdk **MINSDKVERSION**
+        targetSdk **TARGETSDKVERSION**
+        versionCode **VERSIONCODE**
+
+        ndk {
+            debugSymbolLevel **DEBUGSYMBOLLEVEL**
+            abiFilters **ABIFILTERS**
+        }
+
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+        }
+    }
+
+    lint {
+        abortOnError false
+    }
+
+    androidResources {
+        ignoreAssetsPattern = "!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~"
+        noCompress = **BUILTIN_NOCOMPRESS** + unityStreamingAssets.tokenize(', ')
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging true
+        }
+        resources {
+            // Resolve META-INF conflicts from kotlinx-coroutines and other Kotlin libs
+            pickFirsts += ['META-INF/kotlinx_coroutines_core.version']
+            pickFirsts += ['META-INF/kotlinx-coroutines-core.version']
+        }
+    }
+}**REPOSITORIES**
+**IL_CPP_BUILD_SETUP**
+**SOURCE_BUILD_SETUP**
+**EXTERNAL_SOURCES**
