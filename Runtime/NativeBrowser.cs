@@ -8,8 +8,53 @@ namespace TedLiou.NativeBrowser
         private const string BridgeClassName = "com.tedliou.android.browser.BrowserManager";
         private const string UnityPlayerClassName = "com.unity3d.player.UnityPlayer";
 
+        // Events fired when Android native callbacks are received
+        // Subscribe to these events to handle browser lifecycle and interactions
+
+        /// <summary>
+        /// Fired when a page starts loading in the WebView.
+        /// </summary>
+        public static event Action<string> OnPageStarted;
+
+        /// <summary>
+        /// Fired when a page finishes loading in the WebView.
+        /// </summary>
+        public static event Action<string> OnPageFinished;
+
+        /// <summary>
+        /// Fired when an error occurs in the WebView.
+        /// Parameters: (errorMessage, url)
+        /// </summary>
+        public static event Action<string, string> OnError;
+
+        /// <summary>
+        /// Fired when a PostMessage is received from JavaScript in the WebView.
+        /// </summary>
+        public static event Action<string> OnPostMessage;
+
+        /// <summary>
+        /// Fired when JavaScript execution returns a result.
+        /// Parameters: (requestId, result)
+        /// </summary>
+        public static event Action<string, string> OnJsResult;
+
+        /// <summary>
+        /// Fired when a deep link is triggered in the WebView.
+        /// </summary>
+        public static event Action<string> OnDeepLink;
+
+        /// <summary>
+        /// Fired when the browser is closed.
+        /// </summary>
+        public static event Action OnClosed;
+
         public static void Initialize()
         {
+            // Initialize the callback receiver GameObject
+            // This must be done before any Android calls to ensure callbacks are received
+            var receiver = NativeBrowserCallbackReceiver.Instance;
+            receiver.gameObject.SetActive(true);
+
 #if UNITY_ANDROID && !UNITY_EDITOR
             try
             {
