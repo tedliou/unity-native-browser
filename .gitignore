@@ -37,3 +37,28 @@ __pycache__/
 .Python
 env/
 venv/
+
+# Build outputs
+build/
+
+# Android Gradle caches/daemons
+src/android/caches/
+src/android/daemon/
+src/android/native/
+src/android/wrapper/
+src/android/.gradle/
+local.properties
+
+# Unity cache/temp
+src/unity/Library/
+src/unity/.utmp/
+src/unity/Temp/
+src/unity/Logs/
+src/unity/obj/
+
+# Windows artifacts
+NUL
+
+# Gradle backup templates
+*.backup
+*.backup.meta
