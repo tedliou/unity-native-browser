@@ -15,7 +15,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.activity.OnBackPressedCallback
 import androidx.annotation.MainThread
 import com.tedliou.android.browser.core.BrowserCallback
 import com.tedliou.android.browser.core.BrowserConfig
@@ -38,7 +37,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private var config: BrowserConfig? = null
     private var jsBridge: JsBridge? = null
     private var overlayView: View? = null
-    private var backPressedCallback: OnBackPressedCallback? = null
+    private var backPressContainer: BackPressInterceptLayout? = null
     private var lifecycleCallbacks: Application.ActivityLifecycleCallbacks? = null
 
     /**
@@ -72,12 +71,15 @@ class WebViewBrowser(activity: Activity) : IBrowser {
                 config,
                 activity.resources.displayMetrics,
             )
-            val overlay = WebViewLayoutManager.createOverlayView(activity, config)
+            val overlay = WebViewLayoutManager.createOverlayView(activity, config) {
+                close()
+            }
             attachToDecorView(activity, createdWebView, layoutParams, overlay)
             overlayView = overlay
             createdWebView.loadUrl(config.url)
             webView = createdWebView
-            setupBackPressHandling(activity)
+            // Request focus on the back press container so it receives key events
+            backPressContainer?.requestFocus()
             setupLifecycleHandling(activity)
         }
     }
@@ -95,20 +97,18 @@ class WebViewBrowser(activity: Activity) : IBrowser {
                 activity.resources.displayMetrics,
             )
             currentWebView.layoutParams = layoutParams
-            val root = activity.window?.decorView as? FrameLayout
-            if (root == null) {
-                BrowserLogger.e(SUBTAG, "DecorView is not a FrameLayout; cannot update overlay")
-                return@runOnUiThread
+            val container = backPressContainer ?: return@runOnUiThread
+            val overlay = WebViewLayoutManager.createOverlayView(activity, config) {
+                close()
             }
-            val overlay = WebViewLayoutManager.createOverlayView(activity, config)
             if (overlay == null) {
                 overlayView?.let { existing ->
-                    root.removeView(existing)
+                    container.removeView(existing)
                 }
                 overlayView = null
             } else if (overlayView == null) {
                 overlayView = overlay
-                root.addView(overlay, 0)
+                container.addView(overlay, 0)
             }
         }
     }
@@ -204,18 +204,16 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             }
             return
         }
-        overlayView?.let { overlay ->
-            (overlay.parent as? ViewGroup)?.removeView(overlay)
+        // Remove the entire back press container (which holds overlay + WebView)
+        backPressContainer?.let { container ->
+            (container.parent as? ViewGroup)?.removeView(container)
         }
+        backPressContainer = null
         overlayView = null
-        (current.parent as? ViewGroup)?.removeView(current)
         current.stopLoading()
         current.clearHistory()
         webView = null
         jsBridge = null
-        backPressedCallback?.isEnabled = false
-        backPressedCallback?.remove()
-        backPressedCallback = null
         if (notifyClosed) {
             callback?.onClosed()
         }
@@ -224,20 +222,18 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     @MainThread
     private fun destroyInternal() {
         val current = webView ?: return
-        overlayView?.let { overlay ->
-            (overlay.parent as? ViewGroup)?.removeView(overlay)
+        // Remove the entire back press container (which holds overlay + WebView)
+        backPressContainer?.let { container ->
+            (container.parent as? ViewGroup)?.removeView(container)
         }
+        backPressContainer = null
         overlayView = null
-        (current.parent as? ViewGroup)?.removeView(current)
         current.stopLoading()
         current.clearHistory()
         current.removeAllViews()
         current.destroy()
         webView = null
         jsBridge = null
-        backPressedCallback?.isEnabled = false
-        backPressedCallback?.remove()
-        backPressedCallback = null
         lifecycleCallbacks?.let { callbacks ->
             activityRef.get()?.application?.unregisterActivityLifecycleCallbacks(callbacks)
         }
@@ -259,10 +255,30 @@ class WebViewBrowser(activity: Activity) : IBrowser {
             )
             return
         }
-        if (overlay != null) {
-            root.addView(overlay)
+        // Wrap overlay + WebView in a BackPressInterceptLayout that captures
+        // KEYCODE_BACK via dispatchKeyEvent — the only reliable interception point
+        // when running inside Unity's GameActivity (native C++ layer eats key events
+        // before OnBackPressedDispatcher or Activity.onKeyDown can see them).
+        val container = BackPressInterceptLayout(activity) {
+            val wv = webView
+            if (wv != null && wv.canGoBack()) {
+                BrowserLogger.d(SUBTAG, "Back pressed: navigating back in WebView")
+                wv.goBack()
+            } else {
+                BrowserLogger.d(SUBTAG, "Back pressed: closing WebView")
+                close()
+            }
         }
-        root.addView(view, layoutParams)
+        container.layoutParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT,
+        )
+        if (overlay != null) {
+            container.addView(overlay)
+        }
+        container.addView(view, layoutParams)
+        root.addView(container)
+        backPressContainer = container
     }
 
     @MainThread
@@ -370,40 +386,6 @@ class WebViewBrowser(activity: Activity) : IBrowser {
         }
     }
 
-    /**
-     * Sets up back button handling for the WebView.
-     *
-     * When back is pressed:
-     * - If WebView can navigate back in history, it does so
-     * - Otherwise, the WebView is closed
-     */
-    @MainThread
-    private fun setupBackPressHandling(activity: Activity) {
-        // Try to use OnBackPressedDispatcher if activity is ComponentActivity
-        val componentActivity = activity as? androidx.activity.ComponentActivity
-        if (componentActivity != null) {
-            val callback = object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    runOnUiThread {
-                        val view = webView
-                        if (view != null && view.canGoBack()) {
-                            BrowserLogger.d(SUBTAG, "Back pressed: navigating back in WebView")
-                            view.goBack()
-                        } else {
-                            BrowserLogger.d(SUBTAG, "Back pressed: closing WebView")
-                            close()
-                        }
-                    }
-                }
-            }
-            componentActivity.onBackPressedDispatcher.addCallback(componentActivity, callback)
-            backPressedCallback = callback
-            BrowserLogger.d(SUBTAG, "Back button handling registered via OnBackPressedCallback")
-        } else {
-            BrowserLogger.w(SUBTAG, "Activity is not ComponentActivity; back button handling not available")
-            BrowserLogger.w(SUBTAG, "For back button support, Unity Activity should extend ComponentActivity")
-        }
-    }
 
     /**
      * Sets up Activity lifecycle handling for the WebView.

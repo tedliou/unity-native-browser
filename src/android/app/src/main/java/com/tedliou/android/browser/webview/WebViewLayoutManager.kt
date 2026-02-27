@@ -39,7 +39,7 @@ object WebViewLayoutManager {
         }
     }
 
-    fun createOverlayView(context: Context, config: BrowserConfig): View? {
+    fun createOverlayView(context: Context, config: BrowserConfig, onTapOutside: (() -> Unit)? = null): View? {
         val isFullScreen = config.width == 1.0f && config.height == 1.0f
         if (isFullScreen) {
             return null
@@ -51,6 +51,12 @@ object WebViewLayoutManager {
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT,
             )
+            if (config.closeOnTapOutside && onTapOutside != null) {
+                setOnClickListener {
+                    BrowserLogger.d(SUBTAG, "Tap outside detected; closing WebView")
+                    onTapOutside()
+                }
+            }
         }
     }
 
