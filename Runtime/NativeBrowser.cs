@@ -8,6 +8,10 @@ namespace TedLiou.NativeBrowser
     {
         #if UNITY_ANDROID && !UNITY_EDITOR
         private static readonly IPlatformBridge bridge = new AndroidBridge();
+#elif UNITY_WEBGL && !UNITY_EDITOR
+        private static readonly IPlatformBridge bridge = new WebGLBridge();
+#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+        private static readonly IPlatformBridge bridge = new WindowsBridge();
 #else
         private static readonly IPlatformBridge bridge = new EditorBridge();
 #endif
