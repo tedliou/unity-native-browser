@@ -30,7 +30,7 @@ namespace TedLiou.NativeBrowser
                         // Create new GameObject with exact name expected by Android bridge
                         GameObject go = new GameObject("NativeBrowserCallback");
                         instance = go.AddComponent<NativeBrowserCallbackReceiver>();
-                        DontDestroyOnLoad(go);
+                        if (!Application.isBatchMode) DontDestroyOnLoad(go);
                     }
                 }
                 return instance;

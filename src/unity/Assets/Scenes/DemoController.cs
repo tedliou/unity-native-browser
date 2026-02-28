@@ -58,9 +58,9 @@ namespace TedLiou.Demo
         {
             var config = new BrowserConfig("https://example.com")
             {
-                width             = 0.9f,
+                width             = 0.5f,
                 height            = 0.8f,
-                alignment         = Alignment.CENTER,
+                alignment         = Alignment.LEFT,
                 closeOnTapOutside = true,
                 enableJavaScript  = true
             };

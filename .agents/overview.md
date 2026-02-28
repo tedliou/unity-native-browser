@@ -1,10 +1,10 @@
 # Project Overview
 
-Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, and system browser launch via a C# → Kotlin bridge.
+Native browser plugin for Unity. Provides WebView, Custom Tabs, and system browser launch across Android, Windows, and WebGL platforms.
 
 ## Status
 
-**v1.0.0** — Production complete.
+**v1.1.0** — Multi-platform (Android production, Windows + WebGL in development).
 
 ## Repository Map
 
@@ -12,7 +12,8 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 .
 ├── src/android/          → Android Gradle project (Kotlin) → builds .aar
 ├── src/unity/            → Unity 6 project (C#, URP)
-├── tools/                → Shell scripts (build, test, deploy, clean, copy-aar)
+├── src/windows/          → Windows Rust project → builds DLL (WebView2)
+├── tools/                → Build scripts, test server, automation
 ├── docs/                 → Developer docs (EN + zh-TW)
 ├── .agents/              → AI knowledge base (this directory)
 └── README.md
@@ -28,6 +29,8 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 | [build.md](build.md) | Build commands, environment, pipeline steps |
 | [troubleshooting.md](troubleshooting.md) | Known bugs, root causes, and fix locations |
 | [conventions.md](conventions.md) | Code style, anti-patterns, naming rules |
+| [windows.md](windows.md) | Windows architecture, WebView2, Rust native layer |
+| [webgl.md](webgl.md) | WebGL architecture, .jslib, iframe overlay, test server |
 
 ## Tech Stack
 
@@ -49,3 +52,5 @@ Android native browser plugin (.aar) for Unity. Provides WebView, Custom Tabs, a
 - **System Browser**: ACTION_VIEW fallback
 - **Events**: page lifecycle, errors, PostMessage, JS results, deep links, closed
 - **Testing**: Android unit tests (Robolectric + MockK), Unity Edit Mode + Play Mode tests
+- **Windows WebView2**: in-app browser via WebView2 COM, Rust native DLL
+- **WebGL**: iframe overlay for WebView, `window.open()` for CustomTab/SystemBrowser, no template setup required
