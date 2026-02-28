@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
+using TedLiou.NativeBrowser.Editor;
 
 namespace TedLiou.NativeBrowser.Tests
 {

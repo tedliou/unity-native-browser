@@ -89,3 +89,13 @@ classes.jar
 
 # Test screenshots
 webgl-test-1.png
+
+# Temp log/output files (local test runs)
+*.txt
+!docs/**/*.txt
+
+# Ad-hoc debug/helper scripts
+tools/check-exe-window.ps1
+tools/extract-*.ps1
+tools/read-*.ps1
+tools/wait-*.ps1
