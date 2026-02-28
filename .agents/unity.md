@@ -96,6 +96,28 @@ using (var javaClass = new AndroidJavaClass("com.tedliou.android.browser.Browser
 
 Platform guarded: editor shows warnings, Android runs native.
 
+## WebGL Integration
+
+### .jslib Plugin
+
+`Runtime/Plugins/WebGL/NativeBrowser.jslib` — JavaScript plugin auto-included in WebGL builds.
+
+### Bridge Selection
+
+```csharp
+#if UNITY_ANDROID && !UNITY_EDITOR
+    bridge = new AndroidBridge();    // JNI → Kotlin
+#elif UNITY_WEBGL && !UNITY_EDITOR
+    bridge = new WebGLBridge();      // DllImport("__Internal") → .jslib
+#elif UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+    bridge = new WindowsBridge();    // DllImport → Rust DLL
+#else
+    bridge = new EditorBridge();     // Debug stubs
+#endif
+```
+
+See [webgl.md](webgl.md) for full architecture details.
+
 ## Testing
 
 | Type | Location | Framework |

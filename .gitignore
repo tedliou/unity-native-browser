@@ -68,3 +68,24 @@ NUL
 
 # Built .aar inside UPM package (CI injects via git add -f before subtree split)
 src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/Android/NativeBrowser.aar
+
+# Rust build cache (contains local paths in .d files)
+src/windows/target/
+
+# Cross-session coordination (ephemeral)
+CHAT.md
+
+# Temp debug/test scripts
+tools/_*.ps1
+
+# Test results and logs
+test-results/
+test-results.xml
+playmode-test-results.xml
+*.log
+
+# Stray build artifacts
+classes.jar
+
+# Test screenshots
+webgl-test-1.png

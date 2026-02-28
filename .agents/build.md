@@ -39,6 +39,59 @@ JAVA_HOME="<UNITY_INSTALL>/Editor/Data/PlaybackEngines/AndroidPlayer/OpenJDK" sr
 "<UNITY_INSTALL>/Editor/Unity" -quit -batchmode -nographics -projectPath src/unity -executeMethod TedLiou.Build.BuildScript.BuildAndroid -buildTarget Android -logFile - 2>&1
 ```
 
+## Build Windows DLL
+
+### Prerequisites
+
+| Tool | Requirement |
+|------|-------------|
+| Rust | Stable toolchain via [rustup](https://rustup.rs) |
+| Target | `x86_64-pc-windows-msvc` (default on Windows) |
+
+### Build Command
+
+```powershell
+# Automated build + test + copy to Unity
+.\tools\build-windows.ps1
+
+# Or manual steps:
+cd src\windows
+cargo test              # Run 24 unit tests
+cargo build --release   # Build release DLL
+```
+
+**Output**: `src/windows/target/release/NativeBrowserWebView.dll` → copied to `src/unity/Assets/Plugins/x86_64/`
+
+## Build WebGL
+
+### Prerequisites
+
+| Tool | Requirement |
+|------|-------------|
+| Unity | 6000.x with **WebGL Build Support** module installed |
+| Python | 3.x (for test server — stdlib only, no pip packages) |
+
+### Build Command
+
+```bash
+"<UNITY_INSTALL>/Editor/Unity" -quit -batchmode -nographics -projectPath E:/test-project -executeMethod TestProject.Build.BuildScript.BuildWebGL -buildTarget WebGL -logFile - 2>&1
+```
+
+### Test Server
+
+```bash
+python tools/webgl-test-server.py [BUILD_DIR] [--port PORT] [--cross-origin-port PORT2]
+```
+
+Provides: WebGL file serving with required COOP/COEP headers, same-origin and cross-origin test pages, log collection API.
+
+### Build Script Options
+
+```powershell
+.\tools\build-windows.ps1              # Release build + copy to Unity
+.\tools\build-windows.ps1 -Debug       # Debug build + copy
+.\tools\build-windows.ps1 -SkipCopy    # Build only, no copy
+```
 **Output**: `build/NativeBrowser.apk`
 
 ## Deploy to Device
@@ -62,6 +115,7 @@ Automation scripts in [`tools/`](../tools/):
 - `deploy.sh` — Build APK + adb install
 - `clean.sh` — Clean build artifacts
 - `create-release.sh` — Build all release artifacts (`.aar` + `.tgz`), optionally publish GitHub Release
+- `build-windows.ps1` — Windows DLL build (Rust → copy to Unity)
 
 ## Release Pipeline
 
@@ -148,3 +202,6 @@ Requires: [GitHub CLI](https://cli.github.com/) (`gh`) authenticated via `gh aut
 | Gradle daemon lock files | `gradlew --stop` then retry |
 | `local.properties` missing | Auto-created by Gradle; contains `sdk.dir`, do NOT commit |
 | AGP 9.0 + Kotlin plugin | Do NOT add `kotlin-android` to root `build.gradle.kts` |
+| DLL locked by Unity | Close Unity before rebuilding `NativeBrowserWebView.dll` |
+| WebView2 Runtime missing | Install from [Microsoft](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) (bundled with Win11) |
+| Rust target missing | `rustup target add x86_64-pc-windows-msvc` |

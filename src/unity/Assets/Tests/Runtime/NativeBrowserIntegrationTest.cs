@@ -9,7 +9,9 @@ namespace TedLiou.NativeBrowser.Tests
 {
     /// <summary>
     /// Integration tests for the NativeBrowser static API.
-    /// Tests behavior in Unity Editor where Android JNI is not available.
+    /// Tests behavior in Unity Editor across all supported platforms.
+    /// On Windows Editor, the WindowsBridge is active (with native DLL).
+    /// On non-Windows/non-Android Editor, the EditorBridge stub is active.
     /// </summary>
     public class NativeBrowserIntegrationTest
     {
@@ -31,7 +33,7 @@ namespace TedLiou.NativeBrowser.Tests
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.Initialize();
-            }, "Initialize should work in Editor without Android JNI");
+            }, "Initialize should work in Editor without crashing");
 
             // Verify GameObject was created
             var go = GameObject.Find("NativeBrowserCallback");
@@ -39,59 +41,85 @@ namespace TedLiou.NativeBrowser.Tests
         }
 
         [Test]
-        public void Close_InEditor_LogsWarningWithoutCrash()
+        public void Close_InEditor_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Should log warning but not crash
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // On Windows, WindowsBridge handles Close via native DLL — no "Android-only" warning
+            Assert.DoesNotThrow(() => 
+            {
+                NativeBrowser.Close();
+            }, "Close should handle Windows Editor environment gracefully");
+#else
+            // On non-Windows Editor, EditorBridge logs "Android-only" warning
             LogAssert.Expect(LogType.Warning, "NativeBrowser: Close is Android-only and was called in editor or non-Android platform");
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.Close();
             }, "Close should handle Editor environment gracefully");
+#endif
         }
 
         [Test]
-        public void Refresh_InEditor_LogsWarningWithoutCrash()
+        public void Refresh_InEditor_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Should log warning but not crash
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            Assert.DoesNotThrow(() => 
+            {
+                NativeBrowser.Refresh();
+            }, "Refresh should handle Windows Editor environment gracefully");
+#else
             LogAssert.Expect(LogType.Warning, "NativeBrowser: Refresh is Android-only and was called in editor or non-Android platform");
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.Refresh();
             }, "Refresh should handle Editor environment gracefully");
+#endif
         }
 
         [Test]
-        public void ExecuteJavaScript_InEditor_LogsWarningWithoutCrash()
+        public void ExecuteJavaScript_InEditor_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Should log warning but not crash
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            Assert.DoesNotThrow(() => 
+            {
+                NativeBrowser.ExecuteJavaScript("console.log('test');", "req-1");
+            }, "ExecuteJavaScript should handle Windows Editor environment gracefully");
+#else
             LogAssert.Expect(LogType.Warning, "NativeBrowser: ExecuteJavaScript is Android-only and was called in editor or non-Android platform");
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.ExecuteJavaScript("console.log('test');", "req-1");
             }, "ExecuteJavaScript should handle Editor environment gracefully");
+#endif
         }
 
         [Test]
-        public void InjectJavaScript_InEditor_LogsWarningWithoutCrash()
+        public void InjectJavaScript_InEditor_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Should log warning but not crash
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            Assert.DoesNotThrow(() => 
+            {
+                NativeBrowser.InjectJavaScript("window.testValue = 123;");
+            }, "InjectJavaScript should handle Windows Editor environment gracefully");
+#else
             LogAssert.Expect(LogType.Warning, "NativeBrowser: InjectJavaScript is Android-only and was called in editor or non-Android platform");
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.InjectJavaScript("window.testValue = 123;");
             }, "InjectJavaScript should handle Editor environment gracefully");
+#endif
         }
 
         [Test]
@@ -100,15 +128,19 @@ namespace TedLiou.NativeBrowser.Tests
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Should log warning and return false
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // On Windows, IsOpen calls the DLL — should return false when no browser is open
+            bool isOpen = NativeBrowser.IsOpen;
+            Assert.IsFalse(isOpen, "IsOpen should return false when no browser is open");
+#else
             LogAssert.Expect(LogType.Warning, "NativeBrowser: IsOpen is Android-only and was called in editor or non-Android platform");
             bool isOpen = NativeBrowser.IsOpen;
-            
             Assert.IsFalse(isOpen, "IsOpen should return false in Editor");
+#endif
         }
 
         [Test]
-        public void Open_InEditor_LogsWarningWithoutCrash()
+        public void Open_InEditor_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
@@ -119,12 +151,22 @@ namespace TedLiou.NativeBrowser.Tests
                 alignment = Alignment.CENTER
             };
 
-            // Act & Assert: Should log warning but not crash
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // On Windows, Open calls the DLL to create a standalone window
+            Assert.DoesNotThrow(() => 
+            {
+                NativeBrowser.Open(BrowserType.WebView, config);
+            }, "Open should handle Windows Editor environment gracefully");
+
+            // Clean up: close the browser if it was opened
+            try { NativeBrowser.Close(); } catch { }
+#else
             LogAssert.Expect(LogType.Warning, "NativeBrowser: Open is Android-only and was called in editor or non-Android platform");
             Assert.DoesNotThrow(() => 
             {
                 NativeBrowser.Open(BrowserType.WebView, config);
             }, "Open should handle Editor environment gracefully");
+#endif
         }
 
         [Test]
@@ -223,29 +265,37 @@ namespace TedLiou.NativeBrowser.Tests
         }
 
         [Test]
-        public void ExecuteJavaScript_WithEmptyScript_LogsWarningInEditor()
+        public void ExecuteJavaScript_WithEmptyScript_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Empty script should log appropriate warning
-            // In Editor, it will log the "Android-only" warning
-            LogAssert.Expect(LogType.Warning, "NativeBrowser: ExecuteJavaScript is Android-only and was called in editor or non-Android platform");
-            
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // On Windows, empty script triggers a warning from WindowsBridge
+            LogAssert.Expect(LogType.Warning, "NativeBrowser: ExecuteJavaScript called with empty script");
             NativeBrowser.ExecuteJavaScript("");
+#else
+            // On non-Windows Editor, EditorBridge logs "Android-only" warning
+            LogAssert.Expect(LogType.Warning, "NativeBrowser: ExecuteJavaScript is Android-only and was called in editor or non-Android platform");
+            NativeBrowser.ExecuteJavaScript("");
+#endif
         }
 
         [Test]
-        public void InjectJavaScript_WithEmptyScript_LogsWarningInEditor()
+        public void InjectJavaScript_WithEmptyScript_HandlesGracefully()
         {
             // Arrange
             NativeBrowser.Initialize();
 
-            // Act & Assert: Empty script should log appropriate warning
-            // In Editor, it will log the "Android-only" warning
-            LogAssert.Expect(LogType.Warning, "NativeBrowser: InjectJavaScript is Android-only and was called in editor or non-Android platform");
-            
+#if UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN
+            // On Windows, empty script triggers a warning from WindowsBridge
+            LogAssert.Expect(LogType.Warning, "NativeBrowser: InjectJavaScript called with empty script");
             NativeBrowser.InjectJavaScript("");
+#else
+            // On non-Windows Editor, EditorBridge logs "Android-only" warning
+            LogAssert.Expect(LogType.Warning, "NativeBrowser: InjectJavaScript is Android-only and was called in editor or non-Android platform");
+            NativeBrowser.InjectJavaScript("");
+#endif
         }
 
         [Test]

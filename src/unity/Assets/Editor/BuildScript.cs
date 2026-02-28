@@ -48,6 +48,74 @@ namespace TedLiou.Build
             }
         }
 
+        /// <summary>
+        /// Entry point for Unity headless Windows EXE build.
+        /// Invoke via: Unity -batchmode -executeMethod TedLiou.Build.BuildScript.BuildWindows
+        /// </summary>
+        public static void BuildWindows()
+        {
+            Debug.Log("[BuildScript] Starting Windows EXE build...");
+
+            if (!Directory.Exists(OutputDir))
+                Directory.CreateDirectory(OutputDir);
+
+            string exePath = Path.Combine(OutputDir, "NativeBrowser.exe");
+
+            var options = new BuildPlayerOptions
+            {
+                scenes           = GetEnabledScenes(),
+                locationPathName = exePath,
+                target           = BuildTarget.StandaloneWindows64,
+                options          = BuildOptions.None
+            };
+
+            var report = BuildPipeline.BuildPlayer(options);
+
+            if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            {
+                Debug.Log($"[BuildScript] Windows build succeeded: {exePath} ({report.summary.totalSize / 1024 / 1024} MB)");
+            }
+            else
+            {
+                Debug.LogError($"[BuildScript] Windows build FAILED: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+        }
+
+        /// <summary>
+        /// Entry point for Unity headless WebGL build.
+        /// Invoke via: Unity -batchmode -executeMethod TedLiou.Build.BuildScript.BuildWebGL
+        /// </summary>
+        public static void BuildWebGL()
+        {
+            Debug.Log("[BuildScript] Starting WebGL build...");
+
+            if (!Directory.Exists(OutputDir))
+                Directory.CreateDirectory(OutputDir);
+
+            string webglPath = Path.Combine(OutputDir, "WebGL");
+
+            var options = new BuildPlayerOptions
+            {
+                scenes           = GetEnabledScenes(),
+                locationPathName = webglPath,
+                target           = BuildTarget.WebGL,
+                options          = BuildOptions.None
+            };
+
+            var report = BuildPipeline.BuildPlayer(options);
+
+            if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            {
+                Debug.Log($"[BuildScript] WebGL build succeeded: {webglPath}");
+            }
+            else
+            {
+                Debug.LogError($"[BuildScript] WebGL build FAILED: {report.summary.result}");
+                EditorApplication.Exit(1);
+            }
+        }
+
         private static string[] GetEnabledScenes()
         {
             var scenes = new System.Collections.Generic.List<string>();
