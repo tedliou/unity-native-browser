@@ -30,7 +30,7 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Split-Path -Parent $ScriptDir
 $RustProject = Join-Path $ProjectRoot "src\windows"
-$UnityPlugins = Join-Path $ProjectRoot "src\unity\Assets\Plugins\x86_64"
+$UnityPlugins = Join-Path $ProjectRoot "src\unity\Assets\Plugins\NativeBrowser\Runtime\Plugins\x86_64"
 
 # ─── Prerequisites ──────────────────────────────────────────────────────────
 
@@ -150,7 +150,7 @@ function Main {
 
     Write-Host "`nBuild successful!" -ForegroundColor Green
     if (-not $SkipCopy) {
-        Write-Host "  Output: src\unity\Assets\Plugins\x86_64\NativeBrowserWebView.dll" -ForegroundColor Green
+        Write-Host "  Output: src\unity\Assets\Plugins\NativeBrowser\Runtime\Plugins\x86_64\NativeBrowserWebView.dll" -ForegroundColor Green
     }
 }
 

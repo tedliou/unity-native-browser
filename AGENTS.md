@@ -33,7 +33,7 @@
 | Developer docs | `docs/en/` and `docs/zh-tw/` |
 | Automation scripts | `tools/` |
 | Windows Rust native layer | `src/windows/src/` |
-| Windows DLL plugin | `src/unity/Assets/Plugins/x86_64/` |
+| Windows DLL plugin | `src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/x86_64/` |
 | Windows build config | `src/windows/Cargo.toml` |
 | WebGL C# bridge | `src/unity/Assets/Plugins/NativeBrowser/Runtime/Internal/WebGLBridge.cs` |
 | WebGL JavaScript plugin | `src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/WebGL/NativeBrowser.jslib` |

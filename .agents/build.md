@@ -60,7 +60,7 @@ cargo test              # Run 24 unit tests
 cargo build --release   # Build release DLL
 ```
 
-**Output**: `src/windows/target/release/NativeBrowserWebView.dll` → copied to `src/unity/Assets/Plugins/x86_64/`
+**Output**: `src/windows/target/release/NativeBrowserWebView.dll` → copied to `src/unity/Assets/Plugins/NativeBrowser/Runtime/Plugins/x86_64/`
 
 ## Build WebGL
 

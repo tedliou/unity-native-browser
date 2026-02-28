@@ -1,5 +1,5 @@
 $src = "E:\android-browser-for-unity\src\windows\target\x86_64-pc-windows-msvc\release\NativeBrowserWebView.dll"
-$dst = "E:\android-browser-for-unity\src\unity\Assets\Plugins\x86_64\NativeBrowserWebView.dll"
+$dst = "E:\android-browser-for-unity\src\unity\Assets\Plugins\NativeBrowser\Runtime\Plugins\x86_64\NativeBrowserWebView.dll"
 
 if (-not (Test-Path $src)) {
     $src = "E:\android-browser-for-unity\src\windows\target\release\NativeBrowserWebView.dll"

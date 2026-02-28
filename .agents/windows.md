@@ -39,8 +39,8 @@ Windows WebView2 support for the NativeBrowser Unity plugin. A Rust native layer
 
 | Path | Description |
 |------|-------------|
-| `Assets/Plugins/x86_64/NativeBrowserWebView.dll` | Release DLL (Windows x64) |
-| `Assets/Plugins/x86_64/NativeBrowserWebView.dll.meta` | Plugin settings: Windows x64 + Editor |
+| `Assets/Plugins/NativeBrowser/Runtime/Plugins/x86_64/NativeBrowserWebView.dll` | Release DLL (Windows x64) |
+| `Assets/Plugins/NativeBrowser/Runtime/Plugins/x86_64/NativeBrowserWebView.dll.meta` | Plugin settings: Windows x64 + Editor |
 
 ## Threading Model
 
@@ -186,7 +186,7 @@ cargo test                    # Run 24 unit tests
 cargo build --release         # Build release DLL
 ```
 
-**Output**: `src\windows\target\release\NativeBrowserWebView.dll` → copied to `src\unity\Assets\Plugins\x86_64\`
+**Output**: `src\windows\target\release\NativeBrowserWebView.dll` → copied to `src\unity\Assets\Plugins\NativeBrowser\Runtime\Plugins\x86_64\`
 
 ## Testing
 
