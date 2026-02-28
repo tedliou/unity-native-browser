@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-02-28
+
+### Fixed
+
+- Change `NativeBrowserCallbackReceiver` class visibility from `internal` to `public` so consumers can subclass it
+- Change callback methods (`OnPageStarted`, `OnPageFinished`, `OnError`, `OnPostMessage`, `OnJsResult`, `OnDeepLink`, `OnClosed`) from non-virtual to `public virtual` to allow overriding
+- Fix `deepLinkPatterns` default documented as `null` — actual default is empty list
+- Fix `BrowserConfig` documentation missing constructor requirement (`new BrowserConfig(string url)`)
+- Fix `BrowserErrorEvent` documentation listing only 2 fields — actual class has 4 fields (`type`, `message`, `url`, `requestId`)
+- Remove phantom `Open(string url)` method from documentation (only `Open(BrowserType, BrowserConfig)` exists)
+- Remove phantom `ExecuteJavaScript` callback parameter from documentation (results come via `OnJsResult` event)
+- Fix callback override examples using wrong `protected override void OnXxx(parsed_params)` signature — correct signature is `public override void OnXxx(string json)`
+- Rewrite all documentation (EN + ZH-TW) to match actual API
+- Rewrite `NativeBrowserCallbackReceiverTest` to test public API surface instead of using reflection
+
+
 ## [1.1.0] - 2026-02-28
 
 ### Added

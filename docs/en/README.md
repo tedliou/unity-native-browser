@@ -1,6 +1,6 @@
 # NativeBrowser Developer Guide
 
-Developer documentation for the NativeBrowser Unity plugin. This plugin provides a native Android browser experience including WebView, Custom Tabs, and System Browser integration.
+Developer documentation for the NativeBrowser Unity plugin. This plugin provides a cross-platform native browser experience for Android, Windows, and WebGL including WebView, Custom Tabs, and System Browser integration.
 
 ## Table of Contents
 
@@ -29,7 +29,7 @@ Add to your `Packages/manifest.json`:
 }
 ```
 
-To install a specific version, replace `#upm` with `#v1.0.1`.
+To install a specific version, replace `#upm` with `#v1.1.0`.
 
 #### UPM via Tarball
 
@@ -59,7 +59,9 @@ dependencies {
 ```
 
 > **Note**: UPM installation includes these dependencies automatically via `NativeBrowserDeps.androidlib`.
+
 ### Callback Receiver
+
 Create a script that inherits from `NativeBrowserCallbackReceiver` to handle browser events.
 
 ```csharp
@@ -68,20 +70,25 @@ using TedLiou.NativeBrowser;
 
 public class MyBrowserController : NativeBrowserCallbackReceiver
 {
-    protected override void OnPageFinished(string url)
+    public override void OnPageFinished(string json)
     {
-        Debug.Log("Page loaded: " + url);
+        base.OnPageFinished(json); // Preserve event pipeline
+        var data = JsonUtility.FromJson<PageFinishedEvent>(json);
+        Debug.Log("Page loaded: " + data.url);
     }
 
-    protected override void OnError(string message, string url)
+    public override void OnError(string json)
     {
-        Debug.LogError($"Browser error: {message} at {url}");
+        base.OnError(json); // Preserve event pipeline
+        var data = JsonUtility.FromJson<BrowserErrorEvent>(json);
+        Debug.LogError($"Browser error: {data.message} at {data.url}");
     }
 }
 ```
 
 ### Opening a URL
-Initialize the browser and open a URL with default settings.
+
+Initialize the browser and open a URL using `BrowserConfig`.
 
 ```csharp
 using TedLiou.NativeBrowser;
@@ -89,29 +96,36 @@ using TedLiou.NativeBrowser;
 public void OpenGoogle()
 {
     NativeBrowser.Initialize();
-    NativeBrowser.Open("https://www.google.com");
+    NativeBrowser.Open(BrowserType.WebView, new BrowserConfig("https://www.google.com"));
 }
 ```
 
 ## WebView Features
 
 ### JavaScript Execution and Injection
+
 You can execute JavaScript in the current page or inject code before the page loads.
 
 ```csharp
-// Execute JavaScript and receive result
-NativeBrowser.ExecuteJavaScript("document.title", (requestId, result) => {
-    Debug.Log("Page title: " + result);
-});
+// Execute JavaScript — result delivered via OnJsResult event
+NativeBrowser.ExecuteJavaScript("document.title", "get-title");
+
+// Listen for the result
+NativeBrowser.OnJsResult += (requestId, result) => {
+    if (requestId == "get-title")
+        Debug.Log("Page title: " + result);
+};
 
 // Inject JavaScript
 NativeBrowser.InjectJavaScript("window.MyApp = { version: '1.0' };");
 ```
 
 ### PostMessage Communication
+
 Web pages and Unity can exchange messages bidirectionally using PostMessage.
 
 **Web → Unity**
+
 The web page sends a message using either `window.postMessage(message, '*')` (intercepted by the bridge script) or `window.NativeBrowserBridge.postMessage(message)` (direct call). Any non-empty string is accepted.
 
 ```javascript
@@ -122,14 +136,16 @@ window.NativeBrowserBridge.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", t
 
 ```csharp
 // Unity side (inside your callback receiver)
-protected override void OnPostMessage(string message)
+public override void OnPostMessage(string json)
 {
-    // message contains the raw string from web
-    Debug.Log("Received from web: " + message);
+    base.OnPostMessage(json); // Preserve event pipeline
+    var data = JsonUtility.FromJson<PostMessageEvent>(json);
+    Debug.Log("Received from web: " + data.message);
 }
 ```
 
 **Unity → Web**
+
 Use `NativeBrowser.SendPostMessage(message)` to send a string to the web page.
 
 ```csharp
@@ -143,13 +159,14 @@ window.addEventListener('message', function(e) {
     console.log(e.data); // "hello from Unity"
 });
 ```
+
 ### Sizing and Alignment
+
 WebView supports fractional sizing (0.0 to 1.0) relative to the screen.
 
 ```csharp
-var config = new BrowserConfig
+var config = new BrowserConfig("https://example.com")
 {
-    url = "https://example.com",
     width = 0.8f,
     height = 0.6f,
     alignment = Alignment.CENTER,
@@ -159,33 +176,32 @@ NativeBrowser.Open(BrowserType.WebView, config);
 ```
 
 ### Deep Link Interception
+
 Intercept specific URL patterns and handle them in Unity.
 
 ```csharp
-var config = new BrowserConfig
+var config = new BrowserConfig("https://example.com")
 {
-    url = "https://example.com",
     deepLinkPatterns = new List<string> { "myapp://process/.*" },
     closeOnDeepLink = true
 };
 NativeBrowser.Open(BrowserType.WebView, config);
 
 // In your callback receiver
-protected override void OnDeepLink(string url)
+public override void OnDeepLink(string json)
 {
-    Debug.Log("Intercepted deep link: " + url);
+    base.OnDeepLink(json);
+    var data = JsonUtility.FromJson<DeepLinkEvent>(json);
+    Debug.Log("Intercepted deep link: " + data.url);
 }
 ```
 
 ## Custom Tabs
 
-Custom Tabs provide a Chrome-optimized browser experience that feels native to the app.
+Custom Tabs provide a Chrome-optimized browser experience that feels native to the app. Available on Android only; on Windows and WebGL, `BrowserType.CustomTab` falls back to the system browser.
 
 ```csharp
-var config = new BrowserConfig
-{
-    url = "https://example.com"
-};
+var config = new BrowserConfig("https://example.com");
 NativeBrowser.Open(BrowserType.CustomTab, config);
 ```
 
@@ -194,21 +210,21 @@ NativeBrowser.Open(BrowserType.CustomTab, config);
 Launch the device's default system browser. This moves the user out of your application.
 
 ```csharp
-NativeBrowser.Open(BrowserType.SystemBrowser, "https://example.com");
+NativeBrowser.Open(BrowserType.SystemBrowser, new BrowserConfig("https://example.com"));
 ```
 
 ## Configuration
 
-The `BrowserConfig` class allows detailed control over the browser instance.
+The `BrowserConfig` class allows detailed control over the browser instance. Construct with `new BrowserConfig(string url)`.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `url` | `string` | `""` | The URL to open. |
+| `url` | `string` | (required via constructor) | The URL to open. |
 | `width` | `float` | `1.0f` | Width from 0.0 to 1.0. |
 | `height` | `float` | `1.0f` | Height from 0.0 to 1.0. |
 | `alignment` | `Alignment` | `CENTER` | Positioning of the WebView. |
 | `closeOnTapOutside` | `bool` | `false` | Close WebView when clicking background. |
-| `deepLinkPatterns` | `List<string>` | `null` | Regex patterns for deep link interception. |
+| `deepLinkPatterns` | `List<string>` | empty list | Regex patterns for deep link interception. |
 | `closeOnDeepLink` | `bool` | `true` | Close browser when a deep link is matched. |
 | `enableJavaScript` | `bool` | `true` | Enable or disable JavaScript. |
 | `userAgent` | `string` | `""` | Custom User-Agent string. |
@@ -219,11 +235,11 @@ Events like `OnError` provide details when things go wrong. Common errors includ
 
 ## Threading Model
 
-NativeBrowser uses `AndroidJavaClass` to bridge between Unity and Android.
-1. Calls from Unity C# occur on the Unity main thread.
-2. The bridge passes these calls to the Android `BrowserManager`.
-3. All UI-related operations (creating the WebView, adding it to the layout) are automatically moved to the Android UI thread using `activity.runOnUiThread`.
-4. Callbacks from Android back to Unity use `UnitySendMessage`, which ensures the callback arrives on the Unity main thread.
+NativeBrowser ensures cross-platform threading compatibility for Unity's main thread:
+- **Android**: Calls use `AndroidJavaClass` to bridge to `BrowserManager`. UI operations run on the activity's UI thread via `runOnUiThread`. Callbacks return to Unity via `UnitySendMessage`.
+- **Windows**: WebView2 COM operations run on the STA thread. A callback dispatcher ensures results reach the Unity main thread.
+- **WebGL**: JavaScript interop uses `.jslib` and `postMessage` relay for iframe overlays.
+- **All Platforms**: Callbacks always arrive on the Unity main thread.
 
 ## ProGuard and Stripping
 

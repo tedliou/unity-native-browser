@@ -1,6 +1,6 @@
 # NativeBrowser
 
-Android native browser plugin for Unity — WebView, Custom Tabs, and System Browser via a simple C# API.
+Cross-platform native browser plugin for Unity — WebView, Custom Tabs, and System Browser on Android, Windows, and WebGL via a simple C# API.
 
 ## Requirements
 
@@ -9,6 +9,8 @@ Android native browser plugin for Unity — WebView, Custom Tabs, and System Bro
 | Unity | 6000.0.0f1+ (Unity 6) |
 | Android minSdk | 28 (Android 9.0) |
 | Android compileSdk | 36 |
+| Windows | WebView2 Runtime (included with Edge) |
+| WebGL | Modern browser with iframe support |
 
 ## Installation
 
@@ -29,7 +31,7 @@ To install a specific version:
 ```json
 {
   "dependencies": {
-    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#v1.0.1"
+    "com.tedliou.nativebrowser": "https://github.com/tedliou/unity-native-browser.git#v1.1.0"
   }
 }
 ```
