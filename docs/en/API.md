@@ -2,6 +2,12 @@
 
 Detailed API documentation for the `TedLiou.NativeBrowser` namespace.
 
+## Platform Support
+
+- **Android**: Full support (WebView, Custom Tabs, System Browser).
+- **Windows**: WebView2 (requires Edge/WebView2 Runtime). Custom Tabs falls back to system browser.
+- **WebGL**: WebView via iframe overlay. Custom Tabs and System Browser via `window.open`.
+
 ## Table of Contents
 
 - [NativeBrowser Class](#nativebrowser-class)
@@ -26,29 +32,27 @@ Static class for controlling the browser instance.
 | Method | Description |
 |--------|-------------|
 | `Initialize()` | Initializes the native bridge. Call this before any other method. |
-| `Open(string url)` | Opens the URL using the default browser (WebView) and settings. |
-| `Open(BrowserType type, string url)` | Opens the URL using a specific browser type. |
-| `Open(BrowserType type, BrowserConfig config)` | Opens the URL with specified configuration. |
+| `Open(BrowserType type, BrowserConfig config)` | Opens a browser with the specified type and configuration. |
 | `Close()` | Closes the current browser instance (if any). |
 | `Refresh()` | Refreshes the current WebView page. No-op for other browser types. |
-| `ExecuteJavaScript(string script, Action<string, string> callback = null)` | Runs JavaScript in the WebView and returns the result through a callback. |
+| `ExecuteJavaScript(string script, string requestId = null)` | Runs JavaScript in the WebView. Results are delivered via the `OnJsResult` event, correlated by `requestId`. |
 | `InjectJavaScript(string script)` | Injects JavaScript into the WebView's global scope. |
 | `SendPostMessage(string message)` | Sends a message to web content via JavaScript postMessage. WebView only. |
 
 ## BrowserConfig Class
 
-Configuration settings for creating a browser instance.
+Configuration settings for creating a browser instance. Construct with `new BrowserConfig(string url)`.
 
 ### Fields
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `url` | `string` | `""` | The URL to navigate to. |
+| `url` | `string` | (required via constructor) | The URL to navigate to. |
 | `width` | `float` | `1.0f` | Fractional width of the WebView (0.0 to 1.0). |
 | `height` | `float` | `1.0f` | Fractional height of the WebView (0.0 to 1.0). |
 | `alignment` | `Alignment` | `CENTER` | Positioning of the browser on screen. |
 | `closeOnTapOutside` | `bool` | `false` | Whether to close the browser when clicking the surrounding background. |
-| `deepLinkPatterns` | `List<string>` | `null` | A list of regex patterns to intercept URLs before navigation. |
+| `deepLinkPatterns` | `List<string>` | empty list | A list of regex patterns to intercept URLs before navigation. |
 | `closeOnDeepLink` | `bool` | `true` | Whether to automatically close the browser when a deep link is intercepted. |
 | `enableJavaScript` | `bool` | `true` | Enables or disables JavaScript in the WebView. |
 | `userAgent` | `string` | `""` | Overrides the default browser User-Agent. |
@@ -60,8 +64,8 @@ Supported browser types.
 | Member | Value | Description |
 |--------|-------|-------------|
 | `WebView` | `0` | Integrated browser view inside the application. |
-| `CustomTab` | `1` | Android Custom Tab (Chrome) powered browser. |
-| `SystemBrowser` | `2` | External system browser. |
+| `CustomTab` | `1` | Chrome Custom Tab on Android. Falls back to system browser on Windows and WebGL. |
+| `SystemBrowser` | `2` | External system browser (all platforms). |
 
 ## Alignment Enum
 
@@ -81,7 +85,7 @@ Positioning options for the WebView within the screen area.
 
 ## Event Classes
 
-Events triggered by the browser and passed to `NativeBrowserCallbackReceiver`.
+Events triggered by the browser and passed to `NativeBrowserCallbackReceiver`. These are public, serializable classes that can be used with `JsonUtility.FromJson<T>()` to parse the JSON string received by callback methods.
 
 ### PageStartedEvent
 - `string url`: The URL being loaded.
@@ -90,8 +94,10 @@ Events triggered by the browser and passed to `NativeBrowserCallbackReceiver`.
 - `string url`: The URL that finished loading.
 
 ### BrowserErrorEvent
+- `string type`: The error type (e.g., "LOAD_ERROR", "NETWORK_ERROR").
 - `string message`: Description of the error.
 - `string url`: The URL where the error occurred.
+- `string requestId`: The request identifier, if applicable.
 
 ### PostMessageEvent
 - `string message`: The message string received from JavaScript.
@@ -125,14 +131,14 @@ There are two ways to send messages from JavaScript:
    window.NativeBrowserBridge.postMessage("Direct message");
    ```
 
-Unity receives these messages through the `OnPostMessage` event in your `NativeBrowserCallbackReceiver` implementation:
+Unity receives these messages through the `OnPostMessage` callback in your `NativeBrowserCallbackReceiver` subclass:
 
 ```csharp
-protected override void OnPostMessage(string message)
+public override void OnPostMessage(string json)
 {
-    Debug.Log("Received from web: " + message);
-    // If it's JSON, parse it:
-    // var data = JsonUtility.FromJson<MyData>(message);
+    base.OnPostMessage(json); // Preserve event pipeline
+    var data = JsonUtility.FromJson<PostMessageEvent>(json);
+    Debug.Log("Received from web: " + data.message);
 }
 ```
 

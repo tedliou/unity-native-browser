@@ -1,6 +1,6 @@
 {
   "name": "com.tedliou.nativebrowser",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "displayName": "NativeBrowser",
   "description": "Native browser plugin for Unity — WebView, Custom Tabs, and System Browser on Android, Windows, and WebGL via a simple C# API.",
   "unity": "6000.0",

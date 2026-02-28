@@ -1,6 +1,6 @@
 # NativeBrowser 開發者指南
 
-NativeBrowser Unity 插件的開發者文檔。此插件提供原生的 Android 瀏覽器體驗，包括 WebView、Custom Tabs 以及系統瀏覽器整合。
+NativeBrowser Unity 插件的開發者文檔。此插件提供跨平台的原生瀏覽器體驗，支援 Android、Windows 和 WebGL 平台，包括 WebView、Custom Tabs 以及系統瀏覽器整合。
 
 ## 目錄
 
@@ -29,7 +29,7 @@ NativeBrowser Unity 插件的開發者文檔。此插件提供原生的 Android 
 }
 ```
 
-安裝特定版本，將 `#upm` 替換為 `#v1.0.1`。
+安裝特定版本，將 `#upm` 替換為 `#v1.1.0`。
 
 #### UPM Tarball 安裝
 
@@ -59,7 +59,9 @@ dependencies {
 ```
 
 > **注意**：透過 UPM 安裝時，這些依賴會由 `NativeBrowserDeps.androidlib` 自動處理。
+
 ### 回調接收器
+
 建立一個繼承自 `NativeBrowserCallbackReceiver` 的腳本來處理瀏覽器事件。
 
 ```csharp
@@ -68,54 +70,62 @@ using TedLiou.NativeBrowser;
 
 public class MyBrowserController : NativeBrowserCallbackReceiver
 {
-    // 當頁面加載完成時觸發
-    protected override void OnPageFinished(string url)
+    public override void OnPageFinished(string json)
     {
-        Debug.Log("頁面加載完成: " + url);
+        base.OnPageFinished(json); // 保留事件管線
+        var data = JsonUtility.FromJson<PageFinishedEvent>(json);
+        Debug.Log("頁面加載完成: " + data.url);
     }
 
-    // 當發生錯誤時觸發
-    protected override void OnError(string message, string url)
+    public override void OnError(string json)
     {
-        Debug.LogError($"瀏覽器錯誤: {message} 於 {url}");
+        base.OnError(json); // 保留事件管線
+        var data = JsonUtility.FromJson<BrowserErrorEvent>(json);
+        Debug.LogError($"瀏覽器錯誤: {data.message} 於 {data.url}");
     }
 }
 ```
 
 ### 開啟網址
-初始化瀏覽器並使用預設設定開啟網址。
+
+初始化瀏覽器並使用 `BrowserConfig` 開啟網址。
 
 ```csharp
 using TedLiou.NativeBrowser;
 
 public void OpenGoogle()
 {
-    // 初始化原生橋接器
     NativeBrowser.Initialize();
-    // 開啟網址
-    NativeBrowser.Open("https://www.google.com");
+    NativeBrowser.Open(BrowserType.WebView, new BrowserConfig("https://www.google.com"));
 }
 ```
 
 ## WebView 功能
 
 ### JavaScript 執行與注入
+
 您可以在當前頁面執行 JavaScript 或在頁面加載前注入代碼。
 
 ```csharp
-// 執行 JavaScript 並接收結果
-NativeBrowser.ExecuteJavaScript("document.title", (requestId, result) => {
-    Debug.Log("頁面標題: " + result);
-});
+// 執行 JavaScript — 結果透過 OnJsResult 事件回傳
+NativeBrowser.ExecuteJavaScript("document.title", "get-title");
+
+// 監聽結果
+NativeBrowser.OnJsResult += (requestId, result) => {
+    if (requestId == "get-title")
+        Debug.Log("頁面標題: " + result);
+};
 
 // 注入 JavaScript
 NativeBrowser.InjectJavaScript("window.MyApp = { version: '1.0' };");
 ```
 
 ### PostMessage 通訊
+
 網頁與 Unity 可以透過 PostMessage 進行雙向訊息交換。
 
 **網頁 → Unity**
+
 網頁端可以使用 `window.postMessage(message, '*')`（由橋接腳本攔截）或 `window.NativeBrowserBridge.postMessage(message)`（直接呼叫）與 Unity 通訊。接受任何非空字串。
 
 ```javascript
@@ -128,13 +138,16 @@ window.NativeBrowserBridge.postMessage(JSON.stringify({ type: "LOGIN_SUCCESS", t
 
 ```csharp
 // Unity 端接收原始字串
-protected override void OnPostMessage(string message)
+public override void OnPostMessage(string json)
 {
-    Debug.Log("收到訊息: " + message);
+    base.OnPostMessage(json); // 保留事件管線
+    var data = JsonUtility.FromJson<PostMessageEvent>(json);
+    Debug.Log("收到訊息: " + data.message);
 }
 ```
 
 **Unity → 網頁**
+
 使用 `NativeBrowser.SendPostMessage(message)` 將字串傳送至網頁。
 
 ```csharp
@@ -148,48 +161,47 @@ window.addEventListener('message', function(e) {
 ```
 
 ### 尺寸與對齊方式
+
 WebView 支持相對於螢幕的比例尺寸（0.0 到 1.0）。
 
 ```csharp
-var config = new BrowserConfig
+var config = new BrowserConfig("https://example.com")
 {
-    url = "https://example.com",
     width = 0.8f,
     height = 0.6f,
     alignment = Alignment.CENTER,
-    closeOnTapOutside = true // 點擊背景時關閉
+    closeOnTapOutside = true
 };
 NativeBrowser.Open(BrowserType.WebView, config);
 ```
 
 ### 深層連結攔截
+
 攔截特定的網址格式並在 Unity 中處理。
 
 ```csharp
-var config = new BrowserConfig
+var config = new BrowserConfig("https://example.com")
 {
-    url = "https://example.com",
     deepLinkPatterns = new List<string> { "myapp://process/.*" },
-    closeOnDeepLink = true // 匹配到深層連結後關閉瀏覽器
+    closeOnDeepLink = true
 };
 NativeBrowser.Open(BrowserType.WebView, config);
 
 // 在您的回調接收器中
-protected override void OnDeepLink(string url)
+public override void OnDeepLink(string json)
 {
-    Debug.Log("攔截到深層連結: " + url);
+    base.OnDeepLink(json);
+    var data = JsonUtility.FromJson<DeepLinkEvent>(json);
+    Debug.Log("攔截到深層連結: " + data.url);
 }
 ```
 
 ## Custom Tabs
 
-Custom Tabs 提供由 Chrome 驅動的優化瀏覽器體驗，外觀與應用程式更一致。
+Custom Tabs 提供由 Chrome 驅動的優化瀏覽器體驗，外觀與應用程式更一致。僅限 Android 平台；在 Windows 和 WebGL 上，`BrowserType.CustomTab` 會回退為系統瀏覽器。
 
 ```csharp
-var config = new BrowserConfig
-{
-    url = "https://example.com"
-};
+var config = new BrowserConfig("https://example.com");
 NativeBrowser.Open(BrowserType.CustomTab, config);
 ```
 
@@ -198,21 +210,21 @@ NativeBrowser.Open(BrowserType.CustomTab, config);
 開啟裝置預設的系統瀏覽器。這會讓使用者離開您的應用程式。
 
 ```csharp
-NativeBrowser.Open(BrowserType.SystemBrowser, "https://example.com");
+NativeBrowser.Open(BrowserType.SystemBrowser, new BrowserConfig("https://example.com"));
 ```
 
 ## 配置參數
 
-`BrowserConfig` 類別允許對瀏覽器實例進行詳細控制。
+`BrowserConfig` 類別允許對瀏覽器實例進行詳細控制。透過 `new BrowserConfig(string url)` 建構。
 
 | 選項 | 類型 | 預設值 | 說明 |
 |--------|------|---------|-------------|
-| `url` | `string` | `""` | 要開啟的網址。 |
+| `url` | `string` | （建構函式必填） | 要開啟的網址。 |
 | `width` | `float` | `1.0f` | 寬度比例 (0.0 到 1.0)。 |
 | `height` | `float` | `1.0f` | 高度比例 (0.0 到 1.0)。 |
 | `alignment` | `Alignment` | `CENTER` | WebView 的對齊位置。 |
 | `closeOnTapOutside` | `bool` | `false` | 點擊外部背景時是否關閉 WebView。 |
-| `deepLinkPatterns` | `List<string>` | `null` | 用於攔截深層連結的正則表達式列表。 |
+| `deepLinkPatterns` | `List<string>` | 空列表 | 用於攔截深層連結的正則表達式列表。 |
 | `closeOnDeepLink` | `bool` | `true` | 匹配到深層連結時是否自動關閉瀏覽器。 |
 | `enableJavaScript` | `bool` | `true` | 是否啟用 JavaScript。 |
 | `userAgent` | `string` | `""` | 自定義 User-Agent 字串。 |
@@ -223,11 +235,11 @@ NativeBrowser.Open(BrowserType.SystemBrowser, "https://example.com");
 
 ## 線程模型
 
-NativeBrowser 使用 `AndroidJavaClass` 作為 Unity 與 Android 之間的橋接。
-1. 從 Unity C# 端發出的呼叫發生在 Unity 主線程。
-2. 橋接器將這些呼叫傳遞給 Android 的 `BrowserManager`。
-3. 所有與 UI 相關的操作（建立 WebView、將其加入佈局）都會自動透過 `activity.runOnUiThread` 移動到 Android UI 線程執行。
-4. 從 Android 回傳給 Unity 的回調使用 `UnitySendMessage`，這能確保回調在 Unity 主線程觸發。
+NativeBrowser 根據不同平台採用對應的線程策略：
+- **Android**: 透過 `AndroidJavaClass` 橋接，所有 UI 操作自動在 `runOnUiThread` 執行，並使用 `UnitySendMessage` 將回調傳回 Unity 主線程。
+- **Windows**: WebView2 的生命週期由 STA (Single-Threaded Apartment) 執行緒守護以確保 COM 操作安全。內部回調分派器會將事件同步回 Unity 主線程。
+- **WebGL**: 透過 `.jslib` 進行 JavaScript 互操作，並利用 iframe `postMessage` 機制進行通訊。
+- **所有平台**: 所有 C# 回調事件一律在 Unity 主線程上觸發，確保 API 使用安全。
 
 ## ProGuard 與代碼裁減
 

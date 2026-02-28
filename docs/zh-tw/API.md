@@ -1,5 +1,7 @@
 # API 參考
 
+> **支援平台**: Android（WebView、Custom Tabs、系統瀏覽器）、Windows（WebView2、系統瀏覽器）、WebGL（iframe overlay、window.open）
+
 `TedLiou.NativeBrowser` 命名空間的詳細 API 說明。
 
 ## 目錄
@@ -26,29 +28,27 @@
 | 方法 | 說明 |
 |--------|-------------|
 | `Initialize()` | 初始化原生橋接器。請在呼叫其他方法前呼叫此方法。 |
-| `Open(string url)` | 使用預設瀏覽器 (WebView) 與設定開啟網址。 |
-| `Open(BrowserType type, string url)` | 使用特定的瀏覽器類型開啟網址。 |
 | `Open(BrowserType type, BrowserConfig config)` | 使用指定的設定開啟網址。 |
 | `Close()` | 關閉當前的瀏覽器實例。 |
 | `Refresh()` | 重新整理當前的 WebView 頁面。對其他類型的瀏覽器無效。 |
-| `ExecuteJavaScript(string script, Action<string, string> callback = null)` | 在 WebView 中執行 JavaScript 並透過回調函數回傳結果。 |
+| `ExecuteJavaScript(string script, string requestId = null)` | 在 WebView 中執行 JavaScript。結果透過 OnJsResult 事件回傳，以 requestId 做關聯。 |
 | `InjectJavaScript(string script)` | 將 JavaScript 注入到 WebView 的全域作用域。 |
 | `SendPostMessage(string message)` | 透過 JavaScript postMessage 向網頁內容發送訊息。僅限 WebView。 |
 
 ## BrowserConfig 類別
 
-用於建立瀏覽器實例的組態設定。
+用於建立瀏覽器實例的組態設定。透過 `new BrowserConfig(string url)` 建構。
 
 ### 欄位
 
 | 欄位 | 類型 | 預設值 | 說明 |
 |-------|------|---------|-------------|
-| `url` | `string` | `""` | 要導覽的網址。 |
+| `url` | `string` | （建構函式必填） | 要導覽的網址。 |
 | `width` | `float` | `1.0f` | WebView 的寬度比例 (0.0 到 1.0)。 |
 | `height` | `float` | `1.0f` | WebView 的高度比例 (0.0 到 1.0)。 |
 | `alignment` | `Alignment` | `CENTER` | 瀏覽器在螢幕上的對齊位置。 |
 | `closeOnTapOutside` | `bool` | `false` | 點擊外部背景區域時是否關閉瀏覽器。 |
-| `deepLinkPatterns` | `List<string>` | `null` | 網址導覽前用於攔截的 regex 模式列表。 |
+| `deepLinkPatterns` | `List<string>` | 空列表 | 網址導覽前用於攔截的 regex 模式列表。 |
 | `closeOnDeepLink` | `bool` | `true` | 當攔截到深層連結時，是否自動關閉瀏覽器。 |
 | `enableJavaScript` | `bool` | `true` | 啟用或停用 WebView 中的 JavaScript。 |
 | `userAgent` | `string` | `""` | 覆寫預設的瀏覽器 User-Agent。 |
@@ -60,8 +60,8 @@
 | 成員 | 數值 | 說明 |
 |--------|-------|-------------|
 | `WebView` | `0` | 整合在應用程式內部的瀏覽器視圖。 |
-| `CustomTab` | `1` | Android Custom Tab (Chrome) 驅動的瀏覽器。 |
-| `SystemBrowser` | `2` | 外部系統瀏覽器。 |
+| `CustomTab` | `1` | Android Custom Tab (Chrome) 驅動的瀏覽器。在 Windows 和 WebGL 平台上會回退為系統瀏覽器。 |
+| `SystemBrowser` | `2` | 外部系統瀏覽器（所有平台）。 |
 
 ## Alignment 列舉
 
@@ -90,8 +90,10 @@ WebView 在螢幕區域內的對齊選項。
 - `string url`: 已完成加載的網址。
 
 ### BrowserErrorEvent
+- `string type`: 錯誤類型。
 - `string message`: 錯誤說明。
 - `string url`: 發生錯誤的網址。
+- `string requestId`: 相關的請求 ID。
 
 ### PostMessageEvent
 - `string message`: 從 JavaScript 接收到的訊息字串。
@@ -119,14 +121,15 @@ WebView 在螢幕區域內的對齊選項。
    ```javascript
    window.NativeBrowserBridge.postMessage("Direct message from Web");
    ```
+
 Unity 端透過 `NativeBrowserCallbackReceiver` 中的 `OnPostMessage` 事件接收原始字串：
 
 ```csharp
-protected override void OnPostMessage(string message)
+public override void OnPostMessage(string json)
 {
-    Debug.Log("收到來自網頁的訊息: " + message);
-    // 如果是 JSON，可使用 JsonUtility 解析
-    // var data = JsonUtility.FromJson<MyData>(message);
+    base.OnPostMessage(json); // 保留事件管線
+    var data = JsonUtility.FromJson<PostMessageEvent>(json);
+    Debug.Log("收到來自網頁的訊息: " + data.message);
 }
 ```
 
@@ -138,6 +141,7 @@ Unity 端發送：
 ```csharp
 NativeBrowser.SendPostMessage("Hello from Unity");
 ```
+
 網頁端監聽：
 ```javascript
 window.addEventListener('message', (event) => {
