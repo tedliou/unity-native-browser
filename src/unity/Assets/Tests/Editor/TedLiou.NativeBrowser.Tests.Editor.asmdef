@@ -2,7 +2,8 @@
     "name": "TedLiou.NativeBrowser.Tests.Editor",
     "rootNamespace": "TedLiou.NativeBrowser.Tests",
     "references": [
-        "TedLiou.NativeBrowser"
+        "TedLiou.NativeBrowser",
+        "TedLiou.NativeBrowser.Editor"
     ],
     "includePlatforms": [
         "Editor"
