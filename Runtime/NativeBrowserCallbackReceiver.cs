@@ -5,10 +5,11 @@ using UnityEngine.Scripting;
 namespace TedLiou.NativeBrowser
 {
     /// <summary>
-    /// Internal MonoBehaviour that receives UnitySendMessage callbacks from Android native code.
-    /// This class is automatically instantiated by NativeBrowser.Initialize() and persists across scenes.
+    /// MonoBehaviour that receives native browser callbacks (Android UnitySendMessage, Windows dispatcher).
+    /// Automatically instantiated by NativeBrowser.Initialize() and persists across scenes.
+    /// Override virtual methods to add custom callback handling; always call base to preserve event pipeline.
     /// </summary>
-    internal class NativeBrowserCallbackReceiver : MonoBehaviour
+    public class NativeBrowserCallbackReceiver : MonoBehaviour
     {
         private static NativeBrowserCallbackReceiver instance;
 
@@ -43,7 +44,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"url": "https://..."}
         /// </summary>
         [Preserve]
-        public void OnPageStarted(string json)
+        public virtual void OnPageStarted(string json)
         {
             try
             {
@@ -62,7 +63,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"url": "https://..."}
         /// </summary>
         [Preserve]
-        public void OnPageFinished(string json)
+        public virtual void OnPageFinished(string json)
         {
             try
             {
@@ -81,7 +82,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"message": "...", "url": "..."}
         /// </summary>
         [Preserve]
-        public void OnError(string json)
+        public virtual void OnError(string json)
         {
             try
             {
@@ -100,7 +101,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"message": "..."}
         /// </summary>
         [Preserve]
-        public void OnPostMessage(string json)
+        public virtual void OnPostMessage(string json)
         {
             try
             {
@@ -119,7 +120,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"requestId": "...", "result": "..."}
         /// </summary>
         [Preserve]
-        public void OnJsResult(string json)
+        public virtual void OnJsResult(string json)
         {
             try
             {
@@ -138,7 +139,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {"url": "https://..."}
         /// </summary>
         [Preserve]
-        public void OnDeepLink(string json)
+        public virtual void OnDeepLink(string json)
         {
             try
             {
@@ -157,7 +158,7 @@ namespace TedLiou.NativeBrowser
         /// JSON format: {}
         /// </summary>
         [Preserve]
-        public void OnClosed(string json)
+        public virtual void OnClosed(string json)
         {
             try
             {
