@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Windows platform support** — WebView2-based browser via Rust native layer (NativeBrowserWebView.dll)
+  - Standalone EXE: borderless child window embedded inside Unity game window
+  - Unity Editor: independent top-level preview window (1024×768 default, DPI-aware, auto-scaled)
+  - STA-threaded COM operations for WebView2 lifecycle safety
+  - Click-outside-to-close support
+  - Custom Tabs fallback to system default browser on Windows
+- **WebGL platform support** — iframe overlay and `window.open` fallback
+  - WebView via responsive iframe overlay with `postMessage` bridge
+  - Custom Tabs / System Browser via `window.open`
+  - Automatic cross-origin `postMessage` relay
+  - WebGL build validator editor tool
 - `NativeBrowser.SendPostMessage(string message)` — send arbitrary string messages from Unity to web content via `window.postMessage`
 - Direct `window.NativeBrowserBridge.postMessage(message)` call path for web → Unity messaging
 
@@ -17,10 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PostMessage now accepts any non-empty string (previously required JSON with a `type` field)
 - Bridge script uses smart detection: strings pass through as-is, objects are JSON-serialized
 
-### Breaking Changes
+### Fixed
 
-- Web → Unity messages are no longer guaranteed to be JSON — subscribers to `OnPostMessage` that relied on `JsonUtility.FromJson` must add their own format validation
-
+- Relocate Windows native DLL into UPM package root for proper inclusion in consumer project builds
 ## [1.0.3] - 2026-02-28
 
 ### Fixed
