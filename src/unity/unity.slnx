@@ -1,8 +1,8 @@
 ﻿<Solution>
-  <Project Path="TedLiou.NativeBrowser.csproj" />
-  <Project Path="TedLiou.NativeBrowser.Tests.Runtime.csproj" />
-  <Project Path="TedLiou.NativeBrowser.Tests.Editor.csproj" />
-  <Project Path="TedLiou.Demo.csproj" />
   <Project Path="TedLiou.NativeBrowser.Editor.csproj" />
-  <Project Path="Assembly-CSharp-Editor.csproj" />
+  <Project Path="TedLiou.Build.csproj" />
+  <Project Path="TedLiou.NativeBrowser.csproj" />
+  <Project Path="TedLiou.NativeBrowser.Tests.Editor.csproj" />
+  <Project Path="TedLiou.NativeBrowser.Tests.Runtime.csproj" />
+  <Project Path="TedLiou.Demo.csproj" />
 </Solution>

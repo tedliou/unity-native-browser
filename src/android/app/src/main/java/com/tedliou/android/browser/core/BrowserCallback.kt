@@ -1,65 +1,65 @@
 package com.tedliou.android.browser.core
 
 /**
- * Callback interface for browser lifecycle and interaction events.
+ * 瀏覽器生命週期與互動事件的回呼介面。
  *
- * Implementations receive notifications for page events, user interactions, and errors.
+ * 實作此介面可接收頁面事件、使用者互動及錯誤的通知。
  */
 interface BrowserCallback {
 
     /**
-     * Called when a page starts loading.
+     * 頁面開始載入時呼叫。
      *
-     * @param url The URL being loaded
+     * @param url 正在載入的網址
      */
     fun onPageStarted(url: String)
 
     /**
-     * Called when a page finishes loading.
+     * 頁面載入完成時呼叫。
      *
-     * @param url The final URL after all redirects
+     * @param url 所有重新導向後的最終網址
      */
     fun onPageFinished(url: String)
 
     /**
-     * Called when an error occurs during browser operation.
+     * 瀏覽器操作發生錯誤時呼叫。
      *
-     * @param exception [BrowserException] with error details
+     * @param exception 包含錯誤詳細資訊的 [BrowserException]
      */
     fun onError(exception: BrowserException)
 
     /**
-     * Called when JavaScript posts a message from web content.
+     * JavaScript 從網頁內容發送訊息時呼叫。
      *
-     * The raw string posted from web content via postMessage.
+     * 為網頁內容透過 postMessage 發送的原始字串。
      *
-     * @param message Raw string from web content
+     * @param message 來自網頁內容的原始字串
      */
     fun onPostMessage(message: String)
 
     /**
-     * Called when JavaScript execution completes with a result.
+     * JavaScript 執行完成並回傳結果時呼叫。
      *
-     * Matches async calls via requestId for proper request-response correlation.
+     * 透過 requestId 與非同步呼叫進行對應，以正確關聯請求與回應。
      *
-     * @param requestId Unique identifier for the JavaScript execution request
-     * @param result JSON string containing execution result or null if execution failed
+     * @param requestId JavaScript 執行請求的唯一識別碼
+     * @param result 包含執行結果的 JSON 字串，若執行失敗則為 null
      */
     fun onJsResult(requestId: String, result: String?)
 
     /**
-     * Called when a deep link URL is intercepted.
+     * 攔截到深層連結網址時呼叫。
      *
-     * Deep links are detected by matching [BrowserConfig.deepLinkPatterns].
+     * 深層連結透過比對 [BrowserConfig.deepLinkPatterns] 來偵測。
      *
-     * @param url The deep link URL
+     * @param url 深層連結網址
      */
     fun onDeepLink(url: String)
 
     /**
-     * Called when the browser is closed.
+     * 瀏覽器關閉時呼叫。
      *
-     * This occurs after [IBrowser.close] is called or user-initiated close.
+     * 在呼叫 [IBrowser.close] 或使用者主動關閉後觸發。
      */
     fun onClosed()
 }

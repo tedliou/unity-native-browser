@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mock Deep Link Page</title>
+</head>
+
+<body>
+    <p>Mock deep link page. Navigates to myapp:// on load.</p>
+    <script>
+        window.addEventListener('load', function () {
+            // Immediately navigate to a deep link URL to trigger interception
+            window.location.href = 'myapp://test/deeplink';
+        });
+    </script>
+</body>
+
+</html>

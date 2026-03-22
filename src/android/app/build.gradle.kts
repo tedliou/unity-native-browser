@@ -1,3 +1,5 @@
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
@@ -10,7 +12,33 @@ android {
     buildToolsVersion = "36.0.0"
 
     defaultConfig {
-        minSdk = 28
+        minSdk = 26
+
+        // -----------------------------------------------------------------------
+        // API 26 相容性驗證（任務 1.2）
+        // 已確認以下所有使用的 API 均相容 Android 8.0（API 26）：
+        //
+        //   WebView.evaluateJavascript(String, ValueCallback)  — API 19+，安全
+        //   WebView.addJavascriptInterface(Object, String)     — API 1+，安全
+        //   WebView.isAttachedToWindow                         — API 19+，安全
+        //   WebSettings.javaScriptEnabled                      — API 1+，安全
+        //   WebSettings.domStorageEnabled                      — API 7+，安全
+        //   WebSettings.mixedContentMode (MIXED_CONTENT_ALWAYS_ALLOW) — API 21+，安全
+        //   WebSettings.cacheMode (LOAD_DEFAULT)               — API 1+，安全
+        //   WebSettings.userAgentString                        — API 1+，安全
+        //   CustomTabsClient.getPackageName()                  — API 18+，安全
+        //   CustomTabsClient.bindCustomTabsService()           — AndroidX，安全
+        //   CustomTabsClient.warmup()                          — AndroidX，安全
+        //   CustomTabsSession.mayLaunchUrl()                   — AndroidX，安全
+        //   CustomTabsIntent.Builder / launchUrl()             — AndroidX，安全
+        //   CustomTabColorSchemeParams                         — AndroidX，安全
+        //   CustomTabsIntent.SHARE_STATE_ON / setShareState()  — AndroidX，安全
+        //   Activity.runOnUiThread()                           — API 1+，安全
+        //   Application.ActivityLifecycleCallbacks             — API 14+，安全
+        //
+        // 原始碼中無任何 @RequiresApi 標注或 Build.VERSION.SDK_INT 版本守衛，
+        // 表示所有 API 呼叫路徑均在 minSdk = 26 範圍內安全使用。
+        // -----------------------------------------------------------------------
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-proguard-rules.pro")
@@ -28,6 +56,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+    }
+    testOptions {
+        unitTests.all {
+            it.extensions.configure(JacocoTaskExtension::class) {
+                isIncludeNoLocationClasses = true
+                excludes = listOf("jdk.internal.*")
+            }
+        }
     }
     kotlin {
         jvmToolchain(11)
@@ -59,7 +95,7 @@ tasks.register<JacocoReport>("jacocoTestReport") {
     val sourceDirs = listOf("src/main/java", "src/main/kotlin")
     sourceDirectories.setFrom(sourceDirs.map { file(it) })
     classDirectories.setFrom(
-        fileTree("build/intermediates/built_in_kotlinc/debug/compileDebugKotlin/classes") {
+        fileTree("build/tmp/kotlin-classes/debug") {
             exclude(
                 "**/R.class",
                 "**/R${'$'}*.class",
@@ -107,6 +143,8 @@ dependencies {
     testImplementation(libs.mockk)
     testImplementation(libs.robolectric)
     testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.kotest.runner.junit4)
+    testImplementation(libs.kotest.property)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.mockk.android)

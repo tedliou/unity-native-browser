@@ -231,6 +231,29 @@ namespace TedLiou.NativeBrowser.Tests
         }
 
         [Test]
+        public void BrowserConfig_BlankUrl_IsAccepted()
+        {
+            // NOTE: Unlike the Android Kotlin BrowserConfig which throws IllegalArgumentException
+            // for blank URLs, the C# BrowserConfig is a plain data class with no validation.
+            // URL validation is handled by the Android layer when Open() is called.
+            // This test documents that behavior difference explicitly.
+
+            // Empty string URL — accepted by C# layer
+            var configEmpty = new BrowserConfig("");
+            Assert.AreEqual("", configEmpty.url, "Empty URL should be accepted by C# BrowserConfig");
+            Assert.DoesNotThrow(() => configEmpty.ToJson(), "ToJson() should not throw for empty URL");
+
+            // Whitespace-only URL — accepted by C# layer
+            var configWhitespace = new BrowserConfig("   ");
+            Assert.AreEqual("   ", configWhitespace.url, "Whitespace URL should be accepted by C# BrowserConfig");
+            Assert.DoesNotThrow(() => configWhitespace.ToJson(), "ToJson() should not throw for whitespace URL");
+
+            // Null URL — accepted by C# layer (Android layer will handle null)
+            var configNull = new BrowserConfig(null);
+            Assert.IsNull(configNull.url, "Null URL should be accepted by C# BrowserConfig");
+        }
+
+        [Test]
         public void BrowserConfig_UserAgentHandling()
         {
             // Test user agent string handling

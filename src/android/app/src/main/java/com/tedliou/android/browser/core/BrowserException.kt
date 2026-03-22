@@ -1,9 +1,9 @@
 package com.tedliou.android.browser.core
 
 /**
- * Sealed class for type-safe browser-related exceptions.
+ * 類型安全的瀏覽器相關例外的密封類別。
  *
- * Provides specific error types for different failure scenarios in browser operations.
+ * 針對瀏覽器操作中不同的失敗情境提供具體的錯誤類型。
  */
 sealed class BrowserException(
     message: String,
@@ -11,10 +11,10 @@ sealed class BrowserException(
 ) : Exception(message, cause) {
 
     /**
-     * Thrown when browser initialization fails.
+     * 瀏覽器初始化失敗時拋出。
      *
-     * @param message Error description
-     * @param cause Underlying exception
+     * @param message 錯誤描述
+     * @param cause 底層例外
      */
     class InitializationException(
         message: String,
@@ -22,11 +22,11 @@ sealed class BrowserException(
     ) : BrowserException(message, cause)
 
     /**
-     * Thrown when a page fails to load.
+     * 頁面載入失敗時拋出。
      *
-     * @param message Error description
-     * @param url The URL that failed to load
-     * @param cause Underlying exception
+     * @param message 錯誤描述
+     * @param url 載入失敗的網址
+     * @param cause 底層例外
      */
     class PageLoadException(
         message: String,
@@ -35,11 +35,11 @@ sealed class BrowserException(
     ) : BrowserException(message, cause)
 
     /**
-     * Thrown when JavaScript execution fails.
+     * JavaScript 執行失敗時拋出。
      *
-     * @param message Error description
-     * @param requestId The JavaScript execution request ID
-     * @param cause Underlying exception
+     * @param message 錯誤描述
+     * @param requestId JavaScript 執行請求的識別碼
+     * @param cause 底層例外
      */
     class JavaScriptException(
         message: String,
@@ -48,27 +48,27 @@ sealed class BrowserException(
     ) : BrowserException(message, cause)
 
     /**
-     * Thrown when browser configuration is invalid.
+     * 瀏覽器設定無效時拋出。
      *
-     * @param message Error description describing the configuration issue
+     * @param message 描述設定問題的錯誤說明
      */
     class ConfigException(
         message: String,
     ) : BrowserException(message)
 
     /**
-     * Thrown when browser is not available or not initialized.
+     * 瀏覽器不可用或尚未初始化時拋出。
      *
-     * @param message Error description
+     * @param message 錯誤描述
      */
     class NotAvailableException(
         message: String,
     ) : BrowserException(message)
 
     /**
-     * Thrown when a URL is invalid or has an unsupported scheme.
+     * 網址無效或使用不支援的協定時拋出。
      *
-     * @param url The invalid URL
+     * @param url 無效的網址
      */
     class InvalidUrlException(
         val url: String,

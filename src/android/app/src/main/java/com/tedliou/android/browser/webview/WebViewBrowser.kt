@@ -25,10 +25,10 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.CountDownLatch
 
 /**
- * WebView-based browser implementation for Unity overlay rendering.
+ * 基於 WebView 的瀏覽器實作，用於 Unity 覆蓋層渲染。
  *
- * Creates a WebView using applicationContext to prevent Activity leaks, attaches it
- * to the Activity decorView as an overlay, and dispatches lifecycle callbacks.
+ * 使用 applicationContext 建立 WebView 以防止 Activity 記憶體洩漏，
+ * 將其作為覆蓋層附加至 Activity 的 decorView，並分派生命週期回呼。
  */
 class WebViewBrowser(activity: Activity) : IBrowser {
     private val activityRef = WeakReference(activity)
@@ -41,10 +41,10 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     private var lifecycleCallbacks: Application.ActivityLifecycleCallbacks? = null
 
     /**
-     * Opens the WebView with the provided configuration.
+     * 使用指定設定開啟 WebView。
      *
-     * Creates a new WebView, applies settings, adds it to the decorView overlay,
-     * and loads the specified URL.
+     * 建立新的 WebView、套用設定、將其加入 decorView 覆蓋層，
+     * 並載入指定的 URL。
      */
     override fun open(config: BrowserConfig, callback: BrowserCallback) {
         runOnUiThread {
@@ -114,7 +114,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Closes the current WebView instance and notifies [BrowserCallback.onClosed].
+     * 關閉目前的 WebView 實例並通知 [BrowserCallback.onClosed]。
      */
     override fun close() {
         runOnUiThread {
@@ -124,7 +124,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Reloads the currently loaded page if WebView is open.
+     * 若 WebView 已開啟，重新載入目前頁面。
      */
     override fun refresh() {
         runOnUiThread {
@@ -159,9 +159,9 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Send a message from Unity to web content via JavaScript postMessage.
+     * 透過 JavaScript postMessage 從 Unity 傳送訊息至網頁內容。
      *
-     * @param message The message string to send to web content
+     * @param message 要傳送至網頁內容的訊息字串
      */
     fun sendPostMessage(message: String) {
         val current = webView
@@ -174,7 +174,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Returns true if the WebView is attached to the window.
+     * 若 WebView 已附加至視窗，回傳 `true`。
      */
     override fun isOpen(): Boolean {
         val activity = activityRef.get()
@@ -196,7 +196,7 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Destroys the WebView instance and releases all resources.
+     * 銷毀 WebView 實例並釋放所有資源。
      */
     override fun destroy() {
         runOnUiThread {
@@ -304,8 +304,8 @@ class WebViewBrowser(activity: Activity) : IBrowser {
     }
 
     /**
-     * Enables JavaScript because the WebView loads a Unity-specified URL and
-     * WebView-based features (postMessage, JS execution) require it.
+     * 啟用 JavaScript，因為 WebView 載入 Unity 指定的 URL，
+     * 且 WebView 功能（postMessage、JS 執行）需要 JavaScript 支援。
      */
     @SuppressLint("SetJavaScriptEnabled")
     @MainThread
@@ -403,12 +403,12 @@ class WebViewBrowser(activity: Activity) : IBrowser {
 
 
     /**
-     * Sets up Activity lifecycle handling for the WebView.
+     * 設定 WebView 的 Activity 生命週期處理。
      *
-     * Responds to Activity lifecycle events:
-     * - onPause: Pauses WebView rendering and timers
-     * - onResume: Resumes WebView rendering and timers
-     * - onDestroy: Destroys WebView and releases resources
+     * 回應 Activity 生命週期事件：
+     * - onPause：暫停 WebView 渲染與計時器
+     * - onResume：恢復 WebView 渲染與計時器
+     * - onDestroy：銷毀 WebView 並釋放資源
      */
     @MainThread
     private fun setupLifecycleHandling(activity: Activity) {

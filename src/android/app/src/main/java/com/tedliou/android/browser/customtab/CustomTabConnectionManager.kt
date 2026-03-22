@@ -11,12 +11,12 @@ import com.tedliou.android.browser.util.BrowserLogger
 import java.lang.ref.WeakReference
 
 /**
- * Manages Custom Tabs service connection lifecycle for performance optimization.
+ * 管理 Custom Tabs 服務連線生命週期，以優化效能。
  *
- * Provides warmup and URL pre-fetching (mayLaunchUrl) capabilities to reduce
- * Custom Tab launch latency. Tracks connection state via service callbacks.
+ * 提供預熱（warmup）與 URL 預取（mayLaunchUrl）功能，降低 Custom Tab 啟動延遲。
+ * 透過服務回調追蹤連線狀態。
  *
- * Usage:
+ * 使用範例：
  * ```kotlin
  * val manager = CustomTabConnectionManager(activity)
  * manager.bindService(onConnected = {
@@ -34,13 +34,12 @@ class CustomTabConnectionManager(activity: Activity) {
     private var isServiceBound = false
 
     /**
-     * Binds to the Custom Tabs service of the default browser.
+     * 綁定至預設瀏覽器的 Custom Tabs 服務。
      *
-     * Asynchronously connects to the service; onConnected callback is invoked
-     * when connection succeeds. If no Custom Tabs-capable browser is found,
-     * logs a warning and does not invoke the callback.
+     * 非同步連線至服務；連線成功後呼叫 onConnected 回調。
+     * 若找不到支援 Custom Tabs 的瀏覽器，則記錄警告並不呼叫回調。
      *
-     * @param onConnected Callback invoked after successful service connection
+     * @param onConnected 服務連線成功後呼叫的回調
      */
     fun bindService(onConnected: () -> Unit) {
         val activity = activityRef.get()
@@ -86,10 +85,10 @@ class CustomTabConnectionManager(activity: Activity) {
     }
 
     /**
-     * Unbinds from the Custom Tabs service and releases resources.
+     * 解除 Custom Tabs 服務綁定並釋放資源。
      *
-     * Should be called when Custom Tabs are no longer needed (e.g., Activity onDestroy).
-     * Ignores call if service was never bound.
+     * 應在不再需要 Custom Tabs 時呼叫（例如 Activity 的 onDestroy）。
+     * 若服務從未綁定，則忽略此呼叫。
      */
     fun unbindService() {
         val activity = activityRef.get()
@@ -115,12 +114,12 @@ class CustomTabConnectionManager(activity: Activity) {
     }
 
     /**
-     * Warms up the browser process to reduce Custom Tab launch latency.
+     * 預熱瀏覽器程序以降低 Custom Tab 啟動延遲。
      *
-     * Should be called after successful service connection. Returns true if warmup
-     * succeeded, false if client is not connected or warmup failed.
+     * 應在服務連線成功後呼叫。若預熱成功則回傳 true，
+     * 若客戶端未連線或預熱失敗則回傳 false。
      *
-     * @return true if warmup succeeded, false otherwise
+     * @return 預熱成功回傳 true，否則回傳 false
      */
     fun warmup(): Boolean {
         val customTabsClient = client
@@ -138,13 +137,13 @@ class CustomTabConnectionManager(activity: Activity) {
     }
 
     /**
-     * Hints the browser to pre-fetch the specified URL for faster loading.
+     * 提示瀏覽器預取指定 URL 以加快載入速度。
      *
-     * Should be called after successful service connection and warmup. The browser
-     * may choose to ignore this hint. Returns true if hint was accepted.
+     * 應在服務連線成功並完成預熱後呼叫。瀏覽器可能忽略此提示。
+     * 若提示被接受則回傳 true。
      *
-     * @param url The URL to pre-fetch
-     * @return true if browser accepted the hint, false if session not ready or hint rejected
+     * @param url 要預取的 URL
+     * @return 瀏覽器接受提示回傳 true，若 session 未就緒或提示被拒絕則回傳 false
      */
     fun mayLaunchUrl(url: String): Boolean {
         val customTabsSession = session
@@ -163,20 +162,19 @@ class CustomTabConnectionManager(activity: Activity) {
     }
 
     /**
-     * Checks if the Custom Tabs service is currently bound and ready.
+     * 檢查 Custom Tabs 服務是否已綁定並就緒。
      *
-     * @return true if service is bound and client is available, false otherwise
+     * @return 服務已綁定且客戶端可用時回傳 true，否則回傳 false
      */
     fun isServiceConnected(): Boolean = isServiceBound && client != null
 
     /**
-     * Gets the current Custom Tabs session.
+     * 取得目前的 Custom Tabs session。
      *
-     * Returns null if service is not connected or session was not created.
-     * The session is used when launching Custom Tabs to associate with the
-     * pre-warmed browser instance.
+     * 若服務未連線或 session 尚未建立則回傳 null。
+     * Session 在啟動 Custom Tab 時使用，以關聯至預熱的瀏覽器實例。
      *
-     * @return The current session, or null if unavailable
+     * @return 目前的 session，若不可用則回傳 null
      */
     fun getSession(): CustomTabsSession? = session
 

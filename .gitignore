@@ -99,3 +99,5 @@ tools/check-exe-window.ps1
 tools/extract-*.ps1
 tools/read-*.ps1
 tools/wait-*.ps1
+
+.kiro

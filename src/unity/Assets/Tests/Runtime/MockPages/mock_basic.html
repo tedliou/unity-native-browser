@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mock Basic Page</title>
+</head>
+
+<body>
+    <p>Mock basic page loaded.</p>
+    <script>
+        window.addEventListener('load', function () {
+            if (window.NativeBrowser && window.NativeBrowser.postMessage) {
+                window.NativeBrowser.postMessage(JSON.stringify({ type: 'loaded' }));
+            } else if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.NativeBrowser) {
+                window.webkit.messageHandlers.NativeBrowser.postMessage(JSON.stringify({ type: 'loaded' }));
+            } else {
+                // Android JavascriptInterface
+                try {
+                    Android.postMessage(JSON.stringify({ type: 'loaded' }));
+                } catch (e) { }
+            }
+        });
+    </script>
+</body>
+
+</html>

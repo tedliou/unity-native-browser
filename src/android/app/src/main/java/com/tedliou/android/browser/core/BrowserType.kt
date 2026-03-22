@@ -1,25 +1,25 @@
 package com.tedliou.android.browser.core
 
 /**
- * Enum representing the different browser implementations available.
+ * 代表可用瀏覽器實作的列舉。
  *
- * - [WEBVIEW]: Android WebView embedded in the application
- * - [CUSTOM_TAB]: Chrome Custom Tabs for enhanced browsing
- * - [SYSTEM_BROWSER]: System default browser launch
+ * - [WEBVIEW]：嵌入於應用程式中的 Android WebView
+ * - [CUSTOM_TAB]：提供增強瀏覽體驗的 Chrome Custom Tabs
+ * - [SYSTEM_BROWSER]：啟動系統預設瀏覽器
  */
 enum class BrowserType {
     /**
-     * Android WebView: embedded browser component with full control over UI and behavior
+     * Android WebView：嵌入式瀏覽器元件，可完整控制 UI 與行為
      */
     WEBVIEW,
 
     /**
-     * Chrome Custom Tabs: enhanced browser experience with app integration
+     * Chrome Custom Tabs：與應用程式整合的增強瀏覽體驗
      */
     CUSTOM_TAB,
 
     /**
-     * System Browser: delegates to device default browser
+     * 系統瀏覽器：委派給裝置預設瀏覽器處理
      */
     SYSTEM_BROWSER,
 }

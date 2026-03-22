@@ -8,12 +8,25 @@ import com.tedliou.android.browser.core.BrowserCallback
 import com.tedliou.android.browser.util.BrowserLogger
 import java.lang.ref.WeakReference
 
+/**
+ * JavaScript 橋接器，負責 WebView 與原生層之間的雙向通訊。
+ *
+ * 透過 [JavascriptInterface] 接收來自網頁的訊息與日誌，
+ * 並提供執行、注入 JavaScript 及傳送 postMessage 的功能。
+ */
 class JsBridge(
     activity: Activity,
     private val callback: BrowserCallback?,
 ) {
     private val activityRef = WeakReference(activity)
 
+    /**
+     * 接收來自網頁的 postMessage 訊息。
+     *
+     * 若訊息內容為空白則忽略，否則在主執行緒上通知 [BrowserCallback.onPostMessage]。
+     *
+     * @param message 網頁傳送的訊息字串
+     */
     @JavascriptInterface
     fun postMessage(message: String) {
         val trimmed = message.trim()
@@ -27,6 +40,15 @@ class JsBridge(
         }
     }
 
+    /**
+     * 接收來自網頁的日誌訊息。
+     *
+     * 根據 [level] 將訊息路由至對應的 [BrowserLogger] 方法，
+     * 並在輸出前對敏感資訊進行遮罩處理。
+     *
+     * @param level 日誌等級字串（如 "debug"、"info"、"warn"、"error"、"verbose"）
+     * @param message 日誌訊息內容
+     */
     @JavascriptInterface
     fun log(level: String, message: String) {
         val sanitized = sanitizeLogMessage(message)
@@ -43,6 +65,13 @@ class JsBridge(
         }
     }
 
+    /**
+     * 將此橋接器作為 JavaScript 介面加入 WebView。
+     *
+     * 介面名稱為 [INTERFACE_NAME]，網頁可透過 `window.NativeBrowserBridge` 存取。
+     *
+     * @param webView 要加入介面的 WebView
+     */
     fun addJavaScriptInterface(webView: WebView) {
         runOnUiThread {
             BrowserLogger.d(SUBTAG, "Adding JavaScript interface: $INTERFACE_NAME")
@@ -50,6 +79,15 @@ class JsBridge(
         }
     }
 
+    /**
+     * 在 WebView 中執行 JavaScript 並透過回呼回傳結果。
+     *
+     * 若腳本為空白，直接以 `null` 呼叫 [BrowserCallback.onJsResult]。
+     *
+     * @param webView 要執行腳本的 WebView
+     * @param script 要執行的 JavaScript 字串
+     * @param requestId 用於識別此次請求的 ID，結果將透過 [BrowserCallback.onJsResult] 回傳
+     */
     fun executeJavaScript(webView: WebView, script: String, requestId: String) {
         val trimmed = script.trim()
         if (trimmed.isEmpty()) {
@@ -74,6 +112,14 @@ class JsBridge(
         }
     }
 
+    /**
+     * 將 JavaScript 腳本注入 WebView，不回傳執行結果。
+     *
+     * 若腳本為空白則直接返回。
+     *
+     * @param webView 要注入腳本的 WebView
+     * @param script 要注入的 JavaScript 字串
+     */
     fun injectJavaScript(webView: WebView, script: String) {
         val trimmed = script.trim()
         if (trimmed.isEmpty()) {
@@ -94,18 +140,24 @@ class JsBridge(
         }
     }
 
+    /**
+     * 注入 postMessage 橋接腳本，攔截網頁的 `window.postMessage` 呼叫，
+     * 並將訊息轉發至原生層。
+     *
+     * @param webView 要注入橋接腳本的 WebView
+     */
     fun injectPostMessageBridge(webView: WebView) {
         injectJavaScript(webView, POST_MESSAGE_BRIDGE_SCRIPT)
     }
 
     /**
-     * Send a message from native to web content via JavaScript postMessage.
+     * 透過 JavaScript postMessage 從原生層傳送訊息至網頁內容。
      *
-     * The message is delivered to the WebView by evaluating a script that calls
-     * window.postMessage with the provided string.
+     * 訊息透過執行 `window.postMessage` 腳本傳遞至 WebView，
+     * 傳送前會對特殊字元進行跳脫處理。
      *
-     * @param webView The WebView to send the message to
-     * @param message The message string to send
+     * @param webView 要傳送訊息的 WebView
+     * @param message 要傳送的訊息字串
      */
     fun sendPostMessage(webView: WebView, message: String) {
         val trimmed = message.trim()

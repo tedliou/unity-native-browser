@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Mock PostMessage Page</title>
+</head>
+
+<body>
+    <p>Mock postMessage page. Listens for "ping" and responds with "pong".</p>
+    <script>
+        // Listen for messages from Unity (sent via NativeBrowser.SendPostMessage)
+        window.addEventListener('message', function (event) {
+            var msg = event.data;
+            if (msg === 'ping') {
+                // Respond with "pong" back to Unity via the Android JS interface
+                if (typeof NativeBrowserPostMessage !== 'undefined') {
+                    NativeBrowserPostMessage.postMessage('pong');
+                } else if (window.NativeBrowser && window.NativeBrowser.postMessage) {
+                    window.NativeBrowser.postMessage('pong');
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

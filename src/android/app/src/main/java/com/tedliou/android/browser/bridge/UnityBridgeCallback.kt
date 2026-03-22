@@ -5,21 +5,21 @@ import com.tedliou.android.browser.core.BrowserException
 import org.json.JSONObject
 
 /**
- * Implementation of [BrowserCallback] that forwards all events to Unity C# via [BrowserBridge].
+ * [BrowserCallback] 的實作，透過 [BrowserBridge] 將所有事件轉發至 Unity C#。
  *
- * Each callback method:
- * 1. Serializes event data to JSON
- * 2. Converts method name to PascalCase (Kotlin onPageStarted → C# OnPageStarted)
- * 3. Sends via [BrowserBridge.sendToUnity]
+ * 每個回調方法：
+ * 1. 將事件資料序列化為 JSON
+ * 2. 將方法名稱轉換為 PascalCase（Kotlin onPageStarted → C# OnPageStarted）
+ * 3. 透過 [BrowserBridge.sendToUnity] 發送
  *
- * This class bridges the Android callback lifecycle to Unity's MonoBehaviour message system.
+ * 此類別將 Android 回調生命週期橋接至 Unity 的 MonoBehaviour 訊息系統。
  */
 class UnityBridgeCallback : BrowserCallback {
 
     /**
-     * Page load started.
+     * 頁面開始載入。
      *
-     * Sends to C# method: OnPageStarted
+     * 發送至 C# 方法：OnPageStarted
      */
     override fun onPageStarted(url: String) {
         val json = JSONObject().apply {
@@ -29,9 +29,9 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * Page load completed.
+     * 頁面載入完成。
      *
-     * Sends to C# method: OnPageFinished
+     * 發送至 C# 方法：OnPageFinished
      */
     override fun onPageFinished(url: String) {
         val json = JSONObject().apply {
@@ -41,11 +41,11 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * Browser operation error occurred.
+     * 瀏覽器操作發生錯誤。
      *
-     * Serializes exception type and context (e.g., URL for PageLoadException, requestId for JavaScriptException).
+     * 序列化例外類型與上下文（例如 PageLoadException 的 URL、JavaScriptException 的 requestId）。
      *
-     * Sends to C# method: OnError
+     * 發送至 C# 方法：OnError
      */
     override fun onError(exception: BrowserException) {
         val json = JSONObject().apply {
@@ -66,11 +66,11 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * JavaScript posted a message from web content.
+     * JavaScript 從網頁內容發送了訊息。
      *
-     * Message is the raw string posted from web content.
+     * message 為網頁內容發送的原始字串。
      *
-     * Sends to C# method: OnPostMessage
+     * 發送至 C# 方法：OnPostMessage
      */
     override fun onPostMessage(message: String) {
         val json = JSONObject().apply {
@@ -80,11 +80,11 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * JavaScript execution completed with a result.
+     * JavaScript 執行完成並回傳結果。
      *
-     * Correlates with async JS calls via requestId.
+     * 透過 requestId 與非同步 JS 呼叫進行關聯。
      *
-     * Sends to C# method: OnJsResult
+     * 發送至 C# 方法：OnJsResult
      */
     override fun onJsResult(requestId: String, result: String?) {
         val json = JSONObject().apply {
@@ -95,9 +95,9 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * Deep link intercepted by the browser.
+     * 瀏覽器攔截到深層連結。
      *
-     * Sends to C# method: OnDeepLink
+     * 發送至 C# 方法：OnDeepLink
      */
     override fun onDeepLink(url: String) {
         val json = JSONObject().apply {
@@ -107,9 +107,9 @@ class UnityBridgeCallback : BrowserCallback {
     }
 
     /**
-     * Browser was closed.
+     * 瀏覽器已關閉。
      *
-     * Sends to C# method: OnClosed
+     * 發送至 C# 方法：OnClosed
      */
     override fun onClosed() {
         val json = JSONObject()

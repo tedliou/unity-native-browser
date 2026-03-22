@@ -178,6 +178,62 @@ namespace TedLiou.NativeBrowser.Tests
             Assert.AreEqual("message", parameters[0].Name);
         }
 
+        // =====================================================================
+        // Non-Android Platform Safety Tests
+        // On non-Android platforms (Editor, Windows, WebGL) all API calls must
+        // be silently ignored — no exceptions should propagate to the caller.
+        // =====================================================================
+
+        [Test]
+        public void Initialize_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.Initialize(),
+                "Initialize() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void Open_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            var config = new BrowserConfig("https://example.com");
+            Assert.DoesNotThrow(() => NativeBrowser.Open(BrowserType.WebView, config),
+                "Open() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void Close_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.Close(),
+                "Close() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void Refresh_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.Refresh(),
+                "Refresh() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void ExecuteJavaScript_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.ExecuteJavaScript("document.title", "req-1"),
+                "ExecuteJavaScript() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void InjectJavaScript_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.InjectJavaScript("console.log('test');"),
+                "InjectJavaScript() should not throw on non-Android platform");
+        }
+
+        [Test]
+        public void SendPostMessage_DoesNotThrow_OnNonAndroidPlatform()
+        {
+            Assert.DoesNotThrow(() => NativeBrowser.SendPostMessage("hello"),
+                "SendPostMessage() should not throw on non-Android platform");
+        }
+
         [Test]
         public void BrowserEventClasses_AreSerializable()
         {

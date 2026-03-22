@@ -1,53 +1,53 @@
 package com.tedliou.android.browser.core
 
 /**
- * Enum representing screen alignment positions for browser layout.
+ * 代表瀏覽器版面配置螢幕對齊位置的列舉。
  *
- * Used by [BrowserConfig.alignment] to position the browser on screen.
+ * 由 [BrowserConfig.alignment] 使用，用於設定瀏覽器在螢幕上的位置。
  */
 enum class Alignment {
     /**
-     * Center of the screen
+     * 螢幕中央
      */
     CENTER,
 
     /**
-     * Left edge, vertically centered
+     * 左側邊緣，垂直置中
      */
     LEFT,
 
     /**
-     * Right edge, vertically centered
+     * 右側邊緣，垂直置中
      */
     RIGHT,
 
     /**
-     * Top edge, horizontally centered
+     * 上方邊緣，水平置中
      */
     TOP,
 
     /**
-     * Bottom edge, horizontally centered
+     * 下方邊緣，水平置中
      */
     BOTTOM,
 
     /**
-     * Top-left corner
+     * 左上角
      */
     TOP_LEFT,
 
     /**
-     * Top-right corner
+     * 右上角
      */
     TOP_RIGHT,
 
     /**
-     * Bottom-left corner
+     * 左下角
      */
     BOTTOM_LEFT,
 
     /**
-     * Bottom-right corner
+     * 右下角
      */
     BOTTOM_RIGHT,
 }

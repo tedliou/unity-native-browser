@@ -6,19 +6,18 @@ import android.widget.FrameLayout
 import com.tedliou.android.browser.util.BrowserLogger
 
 /**
- * A FrameLayout container that intercepts back button key events via [dispatchKeyEvent].
+ * 透過 [dispatchKeyEvent] 攔截返回鍵事件的 FrameLayout 容器。
  *
- * Unity 6's [GameActivity] processes key events at the native C++ layer (UGAInput.cpp)
- * before they reach Java's [OnBackPressedDispatcher] or [Activity.onKeyDown]. This means
- * standard back button handling approaches (OnBackPressedCallback, View.setOnKeyListener)
- * never fire when a WebView is overlaid on top of Unity's GameActivity.
+ * Unity 6 的 [GameActivity] 在原生 C++ 層（UGAInput.cpp）處理按鍵事件，
+ * 早於 Java 層的 [OnBackPressedDispatcher] 或 [Activity.onKeyDown]。
+ * 這意味著當 WebView 覆蓋在 Unity GameActivity 上時，
+ * 標準的返回鍵處理方式（OnBackPressedCallback、View.setOnKeyListener）不會觸發。
  *
- * This layout intercepts [KeyEvent.KEYCODE_BACK] in [dispatchKeyEvent], which is called
- * during the view hierarchy's key event dispatch phase — before GameActivity's native
- * input layer can consume the event. The container must be focusable and hold focus.
+ * 此容器在視圖層級的按鍵事件分派階段攔截 [KeyEvent.KEYCODE_BACK]，
+ * 早於 GameActivity 的原生輸入層消費事件。容器必須可聚焦並持有焦點。
  *
- * @param context The context to use for view creation.
- * @param onBackPress Callback invoked when the back button is pressed (ACTION_UP).
+ * @param context 用於建立視圖的 Context。
+ * @param onBackPress 按下返回鍵時（ACTION_UP）觸發的回呼。
  */
 internal class BackPressInterceptLayout(
     context: Context,

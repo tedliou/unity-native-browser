@@ -4,32 +4,36 @@ import android.util.Log
 import java.net.URL
 
 /**
- * Centralized logging utility for NativeBrowser plugin.
+ * NativeBrowser 插件的集中式日誌工具。
  *
- * Provides structured logging with consistent tag formatting ([NativeBrowser:{subtag}])
- * and includes URL sanitization to prevent logging sensitive query parameters.
+ * 提供統一格式的結構化日誌輸出：
+ * `[NativeBrowser][<SubTag>] <操作描述> | <關鍵參數>`
  *
- * All logging levels (debug, info, warning, error, verbose) are routed through
- * `android.util.Log` with a unified base tag. The companion object provides a
- * configurable [isDebugEnabled] flag to control logging output.
- *
- * Usage:
- * ```kotlin
- * BrowserLogger.d("WebView", "Loading URL")
- * BrowserLogger.i("CustomTab", "User tapped tab")
- * BrowserLogger.e("Bridge", "Failed to execute JS", throwable)
+ * 範例：
  * ```
+ * [NativeBrowser][Manager] open() 開始 | type=WEBVIEW url=https://example.com
+ * [NativeBrowser][WebView] WebView 建立完成 | url=https://example.com width=0.9 height=0.8
+ * [NativeBrowser][Bridge] sendToUnity() | method=OnPageStarted gameObject=NativeBrowserCallback
+ * [NativeBrowser][JsBridge] executeJavaScript() | requestId=req_001 scriptLen=42
+ * ```
+ *
+ * 所有日誌層級（verbose、debug、info、warning、error）均透過 `android.util.Log` 輸出。
+ * 可透過 [isDebugEnabled] 旗標控制日誌輸出。
+ * 訊息中的 URL 會自動移除查詢參數，避免記錄敏感資料。
  *
  * @see android.util.Log
  */
 object BrowserLogger {
-    private const val BASE_TAG = "NativeBrowser"
+    /**
+     * 日誌主標籤，固定為 `[NativeBrowser]`。
+     */
+    const val TAG = "[NativeBrowser]"
 
     /**
-     * Global debug flag. When false, all logging is suppressed.
-     * Default: true (logging enabled)
+     * 全域除錯旗標。設為 `false` 時，所有日誌輸出將被抑制。
+     * 預設值：`true`（啟用日誌）
      *
-     * Can be configured at runtime to control verbosity:
+     * 可在執行期動態設定：
      * ```kotlin
      * BrowserLogger.isDebugEnabled = BuildConfig.DEBUG
      * ```
@@ -37,137 +41,133 @@ object BrowserLogger {
     var isDebugEnabled: Boolean = true
 
     /**
-     * Logs a debug-level message with structured tag.
+     * 輸出 verbose 層級日誌。
      *
-     * Tag format: `NativeBrowser:{subtag}` (e.g., `NativeBrowser:WebView`)
+     * 日誌標籤格式：`[NativeBrowser][<subTag>]`
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param msg Message text. Strings containing URLs are sanitized automatically.
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param message 訊息內容，建議格式：`<操作描述> | <關鍵參數>`。包含 URL 的字串會自動移除查詢參數。
      */
-    fun d(subtag: String, msg: String) {
+    fun v(subTag: String, message: String) {
         if (isDebugEnabled) {
-            Log.d(formatTag(subtag), sanitizeMessage(msg))
+            Log.v(formatTag(subTag), sanitizeMessage(message))
         }
     }
 
     /**
-     * Logs an info-level message with structured tag.
+     * 輸出 debug 層級日誌。
      *
-     * Tag format: `NativeBrowser:{subtag}` (e.g., `NativeBrowser:CustomTab`)
+     * 日誌標籤格式：`[NativeBrowser][<subTag>]`
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param msg Message text. Strings containing URLs are sanitized automatically.
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param message 訊息內容，建議格式：`<操作描述> | <關鍵參數>`。包含 URL 的字串會自動移除查詢參數。
      */
-    fun i(subtag: String, msg: String) {
+    fun d(subTag: String, message: String) {
         if (isDebugEnabled) {
-            Log.i(formatTag(subtag), sanitizeMessage(msg))
+            Log.d(formatTag(subTag), sanitizeMessage(message))
         }
     }
 
     /**
-     * Logs a warning-level message with structured tag.
+     * 輸出 info 層級日誌。
      *
-     * Tag format: `NativeBrowser:{subtag}` (e.g., `NativeBrowser:System`)
+     * 日誌標籤格式：`[NativeBrowser][<subTag>]`
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param msg Message text. Strings containing URLs are sanitized automatically.
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param message 訊息內容，建議格式：`<操作描述> | <關鍵參數>`。包含 URL 的字串會自動移除查詢參數。
      */
-    fun w(subtag: String, msg: String) {
+    fun i(subTag: String, message: String) {
         if (isDebugEnabled) {
-            Log.w(formatTag(subtag), sanitizeMessage(msg))
+            Log.i(formatTag(subTag), sanitizeMessage(message))
         }
     }
 
     /**
-     * Logs an error-level message with optional exception stack trace.
+     * 輸出 warning 層級日誌。
      *
-     * Tag format: `NativeBrowser:{subtag}` (e.g., `NativeBrowser:Bridge`)
+     * 日誌標籤格式：`[NativeBrowser][<subTag>]`
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param msg Message text. Strings containing URLs are sanitized automatically.
-     * @param throwable Optional exception to log with full stack trace. Default: null
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param message 訊息內容，建議格式：`<操作描述> | <關鍵參數>`。包含 URL 的字串會自動移除查詢參數。
      */
-    fun e(subtag: String, msg: String, throwable: Throwable? = null) {
+    fun w(subTag: String, message: String) {
+        if (isDebugEnabled) {
+            Log.w(formatTag(subTag), sanitizeMessage(message))
+        }
+    }
+
+    /**
+     * 輸出 error 層級日誌，可附帶例外堆疊追蹤。
+     *
+     * 日誌標籤格式：`[NativeBrowser][<subTag>]`
+     *
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param message 訊息內容，建議格式：`<操作描述> | <關鍵參數>`。包含 URL 的字串會自動移除查詢參數。
+     * @param throwable 可選的例外物件，附帶完整堆疊追蹤。預設為 `null`。
+     */
+    fun e(subTag: String, message: String, throwable: Throwable? = null) {
         if (isDebugEnabled) {
             if (throwable != null) {
-                Log.e(formatTag(subtag), sanitizeMessage(msg), throwable)
+                Log.e(formatTag(subTag), sanitizeMessage(message), throwable)
             } else {
-                Log.e(formatTag(subtag), sanitizeMessage(msg))
+                Log.e(formatTag(subTag), sanitizeMessage(message))
             }
         }
     }
 
     /**
-     * Logs a verbose-level message with structured tag.
+     * 測量程式碼區塊的執行時間並以 debug 層級記錄耗時。
      *
-     * Tag format: `NativeBrowser:{subtag}` (e.g., `NativeBrowser:Manager`)
+     * 適用於關鍵路徑的效能監控，日誌格式：`<operation> took <duration>ms`
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param msg Message text. Strings containing URLs are sanitized automatically.
-     */
-    fun v(subtag: String, msg: String) {
-        if (isDebugEnabled) {
-            Log.v(formatTag(subtag), sanitizeMessage(msg))
-        }
-    }
-
-    /**
-     * Measures execution time of a code block and logs duration.
-     *
-     * Useful for performance monitoring of critical paths. Logs at debug level
-     * with format: `{operation} took {duration}ms`
-     *
-     * Example:
+     * 範例：
      * ```kotlin
      * val result = BrowserLogger.measureTime("WebView", "PageLoad") {
      *     loadUrl("https://example.com")
      * }
      * ```
      *
-     * @param subtag Component identifier (WebView, CustomTab, Bridge, etc.)
-     * @param operation Operation name for log message
-     * @param block Lambda containing code to measure
-     * @return Result of the block execution
+     * @param subTag 子元件識別碼（例如：Manager、WebView、Bridge）
+     * @param operation 操作名稱，用於日誌訊息
+     * @param block 要測量的程式碼區塊
+     * @return 程式碼區塊的執行結果
      */
-    inline fun <T> measureTime(subtag: String, operation: String, block: () -> T): T {
+    inline fun <T> measureTime(subTag: String, operation: String, block: () -> T): T {
         val start = System.currentTimeMillis()
-        return block().also { result ->
+        return block().also {
             val duration = System.currentTimeMillis() - start
-            d(subtag, "$operation took ${duration}ms")
+            d(subTag, "$operation took ${duration}ms")
         }
     }
 
     /**
-     * Formats a tag string to follow the NativeBrowser pattern.
+     * 將子標籤格式化為完整的 Android log tag。
      *
-     * @param subtag Component identifier
-     * @return Formatted tag: `NativeBrowser:{subtag}`
+     * 格式：`[NativeBrowser][<subTag>]`
+     *
+     * @param subTag 子元件識別碼
+     * @return 格式化後的標籤字串
      */
-    private fun formatTag(subtag: String): String {
-        return "$BASE_TAG:$subtag"
+    private fun formatTag(subTag: String): String {
+        return "$TAG[$subTag]"
     }
 
     /**
-     * Sanitizes messages to prevent logging sensitive data.
+     * 對訊息中的 URL 進行脫敏處理，移除查詢參數以避免記錄敏感資料。
      *
-     * Currently sanitizes URLs by stripping query parameters to prevent
-     * logging of sensitive tokens, API keys, or authentication data.
+     * 範例：`https://example.com/path?token=secret&other=data`
+     *      → 記錄為 `https://example.com/path`
      *
-     * Example: `https://example.com/path?token=secret&other=data`
-     *          → logs as `https://example.com/path`
-     *
-     * @param msg Message containing potential URLs
-     * @return Sanitized message with query parameters removed
+     * @param message 可能包含 URL 的訊息字串
+     * @return 已移除 URL 查詢參數的訊息字串
      */
-    private fun sanitizeMessage(msg: String): String {
-        // Simple URL detection and sanitization: strip query params
-        return msg.replace(Regex("""https?://[^\s?]+\?[^\s]*""")) { matchResult ->
+    private fun sanitizeMessage(message: String): String {
+        return message.replace(Regex("""https?://[^\s?]+\?[^\s]*""")) { matchResult ->
             val url = matchResult.value
             try {
                 val parsed = URL(url.substringBefore(" "))
                 "${parsed.protocol}://${parsed.host}${parsed.path}"
             } catch (e: Exception) {
-                // If URL parsing fails, return sanitized version by stripping after ?
                 url.substringBefore("?")
             }
         }
